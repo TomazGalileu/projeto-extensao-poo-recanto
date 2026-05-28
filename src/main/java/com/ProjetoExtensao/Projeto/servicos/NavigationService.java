@@ -37,6 +37,10 @@ public class NavigationService {
     @Autowired
     private TelaEventosSentinelas telaEventosSentinelas;
 
+    @Lazy
+    @Autowired
+    private TelaRelatorios telaRelatorios;
+
     public void abrirTelaLogin(){
         telaLogin.setVisible(true);
     }
@@ -70,5 +74,9 @@ public class NavigationService {
     public void abrirTelaEventosSentinelas() {
         telaEventosSentinelas.limparCampos();
         telaEventosSentinelas.setVisible(true);
+    }
+
+    public void abrirTelaRelatorios() {
+    telaRelatorios.setVisible(true);
     }
 }
