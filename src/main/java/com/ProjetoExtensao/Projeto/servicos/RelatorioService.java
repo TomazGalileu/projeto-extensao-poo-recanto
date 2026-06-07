@@ -14,6 +14,9 @@ import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 @Service
 public class RelatorioService {
@@ -122,6 +125,65 @@ public class RelatorioService {
         adicionarResumoPeriodo(relatorio, consultas, eventos);
 
         return relatorio.toString();
+    }
+
+    public String gerarIndicadorEventosSentinelasPorPeriodo(
+        LocalDate dataInicio,
+        LocalDate dataFim
+    ) {
+        if (dataInicio == null || dataFim == null) {
+            return "Informe a data inicial e a data final.";
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            return "A data inicial nao pode ser maior que a data final.";
+        }
+
+        List<Paciente> pacientesAtivas = pacienteRepositorio.findByAtivo(true);
+
+        if (pacientesAtivas.isEmpty()) {
+            return "Nao existem pacientes ativas cadastradas.";
+        }
+
+        List<EventoSentinela> eventosNoPeriodo =
+                eventoSentinelaRepositorio.findByDataEventoBetween(
+                    dataInicio,
+                    dataFim
+                );
+
+        Set<Long> idsPacientesComEvento = new HashSet<>();
+
+        for (EventoSentinela evento : eventosNoPeriodo) {
+            Paciente paciente = evento.getPaciente();
+
+            if (paciente != null && Boolean.TRUE.equals(paciente.getAtivo())) {
+                idsPacientesComEvento.add(paciente.getId());
+            }
+        }
+
+        int totalPacientesAtivas = pacientesAtivas.size();
+        int totalPacientesComEvento = idsPacientesComEvento.size();
+
+        double percentual =
+                (totalPacientesComEvento * 100.0) / totalPacientesAtivas;
+
+        return String.format(
+            Locale.forLanguageTag("pt-BR"),
+            """
+            INDICADOR DE EVENTOS SENTINELAS
+            ====================================
+            Periodo: %s ate %s
+
+            Total de pacientes ativas: %d
+            Pacientes com ao menos um evento sentinela: %d
+            Percentual de pacientes com evento sentinela: %.2f%%
+            """,
+            formatarData(dataInicio),
+            formatarData(dataFim),
+            totalPacientesAtivas,
+            totalPacientesComEvento,
+            percentual
+        );
     }
 
     private void adicionarDadosPessoais(StringBuilder relatorio, Paciente paciente) {

@@ -18,4 +18,10 @@ public interface EventoSentinelaRepositorio extends JpaRepository<EventoSentinel
         LocalDate dataInicio,
         LocalDate dataFim
     );
+
+    // Busca todos os eventos ocorridos dentro de um período
+    List<EventoSentinela> findByDataEventoBetween(
+        LocalDate dataInicio,
+        LocalDate dataFim
+    );
 }

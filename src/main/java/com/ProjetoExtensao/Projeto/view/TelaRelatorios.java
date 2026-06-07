@@ -104,6 +104,9 @@ public class TelaRelatorios extends JFrame {
         JButton botaoGerarPeriodo = new JButton("Gerar por Periodo");
         botaoGerarPeriodo.addActionListener(e -> gerarRelatorioPorPeriodo());
 
+        JButton botaoIndicadorEventos = new JButton("Indicador de Eventos");
+        botaoIndicadorEventos.addActionListener(e -> gerarIndicadorEventos());
+
         painelCampos.add(labelCpf);
         painelCampos.add(campoCpf);
         painelCampos.add(labelDataInicio);
@@ -113,6 +116,7 @@ public class TelaRelatorios extends JFrame {
 
         painelBotoes.add(botaoGerar);
         painelBotoes.add(botaoGerarPeriodo);
+        painelBotoes.add(botaoIndicadorEventos);
 
         painelBusca.add(painelCampos);
         painelBusca.add(painelBotoes);
@@ -193,6 +197,33 @@ public class TelaRelatorios extends JFrame {
                 );
 
             areaRelatorio.setText(relatorio);
+            areaRelatorio.setCaretPosition(0);
+
+        } catch (DateTimeParseException exception) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Informe as datas no formato dd/MM/yyyy. Exemplo: 01/01/2026",
+                "Data invalida",
+                JOptionPane.WARNING_MESSAGE
+            );
+        }
+    }
+
+    private void gerarIndicadorEventos() {
+        try {
+            LocalDate dataInicio =
+                LocalDate.parse(campoDataInicio.getText(), formatadorData);
+
+            LocalDate dataFim =
+                LocalDate.parse(campoDataFim.getText(), formatadorData);
+
+            String indicador =
+                relatorioService.gerarIndicadorEventosSentinelasPorPeriodo(
+                    dataInicio,
+                    dataFim
+                );
+
+            areaRelatorio.setText(indicador);
             areaRelatorio.setCaretPosition(0);
 
         } catch (DateTimeParseException exception) {
