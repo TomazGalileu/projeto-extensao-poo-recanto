@@ -39,56 +39,194 @@ public class RelatorioService {
         Paciente paciente = pacienteOptional.get();
 
         List<Consulta> consultas = consultaRepositorio.findAllByPaciente(paciente);
-        List<EventoSentinela> eventos = eventoSentinelaRepositorio.findByPacienteOrderByDataEventoDesc(paciente);
+        List<EventoSentinela> eventos =
+                eventoSentinelaRepositorio.findByPacienteOrderByDataEventoDesc(paciente);
 
         StringBuilder relatorio = new StringBuilder();
 
         relatorio.append("RELATORIO DA IDOSA\n");
         relatorio.append("====================================\n\n");
 
+        adicionarDadosPessoais(relatorio, paciente);
+        adicionarConsultas(relatorio, consultas, "CONSULTAS", "Nenhuma consulta encontrada.");
+        adicionarEventosSentinelas(
+                relatorio,
+                eventos,
+                "EVENTOS SENTINELAS",
+                "Nenhum evento sentinela encontrado."
+        );
+
+        return relatorio.toString();
+    }
+
+    public String gerarRelatorioPorCpfEPeriodo(
+        String cpfDigitado,
+        LocalDate dataInicio,
+        LocalDate dataFim
+    ) {
+        Optional<Paciente> pacienteOptional = buscarPacientePorCpf(cpfDigitado);
+
+        if (pacienteOptional.isEmpty()) {
+            return "Paciente nao encontrado para o CPF informado.";
+        }
+
+        if (dataInicio == null || dataFim == null) {
+            return "Informe a data inicial e a data final.";
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            return "A data inicial nao pode ser maior que a data final.";
+        }
+
+        Paciente paciente = pacienteOptional.get();
+
+        List<Consulta> consultas = consultaRepositorio.findAllByPacienteAndDataBetween(
+                paciente,
+                dataInicio,
+                dataFim
+        );
+
+        List<EventoSentinela> eventos =
+                eventoSentinelaRepositorio.findByPacienteAndDataEventoBetweenOrderByDataEventoDesc(
+                        paciente,
+                        dataInicio,
+                        dataFim
+                );
+
+        StringBuilder relatorio = new StringBuilder();
+
+        relatorio.append("RELATORIO DA IDOSA POR PERIODO\n");
+        relatorio.append("====================================\n");
+        relatorio.append("Periodo: ")
+                .append(formatarData(dataInicio))
+                .append(" ate ")
+                .append(formatarData(dataFim))
+                .append("\n\n");
+
+        adicionarDadosPessoais(relatorio, paciente);
+
+        adicionarConsultas(
+                relatorio,
+                consultas,
+                "CONSULTAS NO PERIODO",
+                "Nenhuma consulta encontrada no periodo informado."
+        );
+
+        adicionarEventosSentinelas(
+                relatorio,
+                eventos,
+                "EVENTOS SENTINELAS NO PERIODO",
+                "Nenhum evento sentinela encontrado no periodo informado."
+        );
+
+        adicionarResumoPeriodo(relatorio, consultas, eventos);
+
+        return relatorio.toString();
+    }
+
+    private void adicionarDadosPessoais(StringBuilder relatorio, Paciente paciente) {
         relatorio.append("DADOS PESSOAIS\n");
         relatorio.append("------------------------------------\n");
         relatorio.append("Nome: ").append(paciente.getNomeCompleto()).append("\n");
         relatorio.append("CPF: ").append(paciente.getCpf()).append("\n");
-        relatorio.append("Data de nascimento: ").append(formatarData(paciente.getDataNascimento())).append("\n");
-        relatorio.append("Idade: ").append(calcularIdade(paciente.getDataNascimento())).append(" anos\n");
-        relatorio.append("Nome da mae: ").append(valorOuVazio(paciente.getNomeMae())).append("\n");
-        relatorio.append("Cartao SUS: ").append(paciente.getCartaoSUS()).append("\n");
-        relatorio.append("Data de entrada: ").append(formatarData(paciente.getDataEntrada())).append("\n");
-        relatorio.append("Status: ").append(Boolean.TRUE.equals(paciente.getAtivo()) ? "Ativa" : "Inativa").append("\n\n");
+        relatorio.append("Data de nascimento: ")
+            .append(formatarData(paciente.getDataNascimento()))
+            .append("\n");
+        relatorio.append("Idade: ")
+            .append(calcularIdade(paciente.getDataNascimento()))
+            .append(" anos\n");
+        relatorio.append("Nome da mae: ")
+            .append(valorOuVazio(paciente.getNomeMae()))
+            .append("\n");
+        relatorio.append("Cartao SUS: ")
+            .append(paciente.getCartaoSUS())
+            .append("\n");
+        relatorio.append("Data de entrada: ")
+            .append(formatarData(paciente.getDataEntrada()))
+            .append("\n");
+        relatorio.append("Status: ")
+            .append(Boolean.TRUE.equals(paciente.getAtivo()) ? "Ativa" : "Inativa")
+            .append("\n\n");
+    }
 
-        relatorio.append("CONSULTAS\n");
+    private void adicionarConsultas(
+        StringBuilder relatorio,
+        List<Consulta> consultas,
+        String titulo,
+        String mensagemSemResultados
+    ) {
+        relatorio.append(titulo).append("\n");
         relatorio.append("------------------------------------\n");
 
         if (consultas.isEmpty()) {
-            relatorio.append("Nenhuma consulta encontrada.\n");
-        } else {
-            for (Consulta consulta : consultas) {
-                relatorio.append("Data: ").append(formatarData(consulta.getData())).append("\n");
-                relatorio.append("Hora: ").append(consulta.getHora()).append("\n");
-                relatorio.append("Tipo: ").append(consulta.getTipoConsulta()).append("\n");
-                relatorio.append("Motivo: ").append(valorOuVazio(consulta.getMotivoConsulta())).append("\n");
-                relatorio.append("Diagnostico: ").append(valorOuVazio(consulta.getDiagnostico())).append("\n");
-                relatorio.append("Anotacoes: ").append(valorOuVazio(consulta.getAnotacoesMedico())).append("\n");
-                relatorio.append("------------------------------------\n");
-            }
+            relatorio.append(mensagemSemResultados).append("\n");
+            return;
         }
 
-        relatorio.append("\nEVENTOS SENTINELAS\n");
+        for (Consulta consulta : consultas) {
+            relatorio.append("Data: ")
+                .append(formatarData(consulta.getData()))
+                .append("\n");
+            relatorio.append("Hora: ")
+                .append(consulta.getHora())
+                .append("\n");
+            relatorio.append("Tipo: ")
+                .append(consulta.getTipoConsulta())
+                .append("\n");
+            relatorio.append("Motivo: ")
+                .append(valorOuVazio(consulta.getMotivoConsulta()))
+                .append("\n");
+            relatorio.append("Diagnostico: ")
+                .append(valorOuVazio(consulta.getDiagnostico()))
+                .append("\n");
+            relatorio.append("Anotacoes: ")
+                .append(valorOuVazio(consulta.getAnotacoesMedico()))
+                .append("\n");
+            relatorio.append("------------------------------------\n");
+        }
+    }
+
+    private void adicionarEventosSentinelas(
+        StringBuilder relatorio,
+        List<EventoSentinela> eventos,
+        String titulo,
+        String mensagemSemResultados
+    ) {
+        relatorio.append("\n").append(titulo).append("\n");
         relatorio.append("------------------------------------\n");
 
         if (eventos.isEmpty()) {
-            relatorio.append("Nenhum evento sentinela encontrado.\n");
-        } else {
-            for (EventoSentinela evento : eventos) {
-                relatorio.append("Data: ").append(formatarData(evento.getDataEvento())).append("\n");
-                relatorio.append("Evento: ").append(evento.getEventosOcorridos()).append("\n");
-                relatorio.append("Descricao: ").append(valorOuVazio(evento.getDescricao())).append("\n");
-                relatorio.append("------------------------------------\n");
-            }
+            relatorio.append(mensagemSemResultados).append("\n");
+            return;
         }
 
-        return relatorio.toString();
+        for (EventoSentinela evento : eventos) {
+            relatorio.append("Data: ")
+                .append(formatarData(evento.getDataEvento()))
+                .append("\n");
+            relatorio.append("Evento: ")
+                .append(evento.getEventosOcorridos())
+                .append("\n");
+            relatorio.append("Descricao: ")
+                .append(valorOuVazio(evento.getDescricao()))
+                .append("\n");
+            relatorio.append("------------------------------------\n");
+        }
+    }
+
+    private void adicionarResumoPeriodo(
+        StringBuilder relatorio,
+        List<Consulta> consultas,
+        List<EventoSentinela> eventos
+    ) {
+        relatorio.append("\nRESUMO DO PERIODO\n");
+        relatorio.append("------------------------------------\n");
+        relatorio.append("Total de consultas: ")
+            .append(consultas.size())
+            .append("\n");
+        relatorio.append("Total de eventos sentinelas: ")
+            .append(eventos.size())
+            .append("\n");
     }
 
     private Optional<Paciente> buscarPacientePorCpf(String cpfDigitado) {

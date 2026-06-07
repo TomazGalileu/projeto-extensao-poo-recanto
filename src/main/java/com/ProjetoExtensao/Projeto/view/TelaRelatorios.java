@@ -6,6 +6,10 @@ import com.ProjetoExtensao.Projeto.servicos.RelatorioService;
 import jakarta.annotation.PostConstruct;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,7 +26,13 @@ public class TelaRelatorios extends JFrame {
     private NavigationService navigationService;
 
     private JTextField campoCpf;
+    private JTextField campoDataInicio;
+    private JTextField campoDataFim;
     private JTextArea areaRelatorio;
+
+    private final DateTimeFormatter formatadorData =
+        DateTimeFormatter.ofPattern("dd/MM/uuuu")
+            .withResolverStyle(ResolverStyle.STRICT);
 
     @PostConstruct
     private void initUI() {
@@ -61,20 +71,51 @@ public class TelaRelatorios extends JFrame {
         painel.setBorder(new EmptyBorder(10, 30, 10, 30));
         painel.setBackground(Cores.COR_FUNDO_CLARO);
 
-        JPanel painelBusca = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel painelBusca = new JPanel();
+        painelBusca.setLayout(new BoxLayout(painelBusca, BoxLayout.Y_AXIS));
         painelBusca.setOpaque(false);
+
+        JPanel painelCampos = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        painelCampos.setOpaque(false);
+
+        JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        painelBotoes.setOpaque(false);
 
         JLabel labelCpf = new JLabel("CPF:");
         labelCpf.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        campoCpf = new JTextField(18);
+        campoCpf = new JTextField(14);
 
-        JButton botaoGerar = new JButton("Gerar Relatorio");
+        JLabel labelDataInicio = new JLabel("Data inicial:");
+        labelDataInicio.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        campoDataInicio = new JTextField(8);
+        campoDataInicio.setToolTipText("Formato: dd/MM/yyyy");
+
+        JLabel labelDataFim = new JLabel("Data final:");
+        labelDataFim.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        campoDataFim = new JTextField(8);
+        campoDataFim.setToolTipText("Formato: dd/MM/yyyy");
+
+        JButton botaoGerar = new JButton("Gerar Relatorio Geral");
         botaoGerar.addActionListener(e -> gerarRelatorio());
 
-        painelBusca.add(labelCpf);
-        painelBusca.add(campoCpf);
-        painelBusca.add(botaoGerar);
+        JButton botaoGerarPeriodo = new JButton("Gerar por Periodo");
+        botaoGerarPeriodo.addActionListener(e -> gerarRelatorioPorPeriodo());
+
+        painelCampos.add(labelCpf);
+        painelCampos.add(campoCpf);
+        painelCampos.add(labelDataInicio);
+        painelCampos.add(campoDataInicio);
+        painelCampos.add(labelDataFim);
+        painelCampos.add(campoDataFim);
+
+        painelBotoes.add(botaoGerar);
+        painelBotoes.add(botaoGerarPeriodo);
+
+        painelBusca.add(painelCampos);
+        painelBusca.add(painelBotoes);
 
         areaRelatorio = new JTextArea();
         areaRelatorio.setEditable(false);
@@ -122,5 +163,45 @@ public class TelaRelatorios extends JFrame {
         String relatorio = relatorioService.gerarRelatorioPorCpf(cpf);
         areaRelatorio.setText(relatorio);
         areaRelatorio.setCaretPosition(0);
+    }
+
+    private void gerarRelatorioPorPeriodo() {
+        String cpf = campoCpf.getText();
+
+        if (cpf == null || cpf.isBlank()) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Informe o CPF da paciente.",
+                "Campo obrigatorio",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        try {
+            LocalDate dataInicio =
+                LocalDate.parse(campoDataInicio.getText(), formatadorData);
+
+            LocalDate dataFim =
+                LocalDate.parse(campoDataFim.getText(), formatadorData);
+
+            String relatorio =
+                relatorioService.gerarRelatorioPorCpfEPeriodo(
+                    cpf,
+                    dataInicio,
+                    dataFim
+                );
+
+            areaRelatorio.setText(relatorio);
+            areaRelatorio.setCaretPosition(0);
+
+        } catch (DateTimeParseException exception) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Informe as datas no formato dd/MM/yyyy. Exemplo: 01/01/2026",
+                "Data invalida",
+                JOptionPane.WARNING_MESSAGE
+            );
+        }
     }
 }
