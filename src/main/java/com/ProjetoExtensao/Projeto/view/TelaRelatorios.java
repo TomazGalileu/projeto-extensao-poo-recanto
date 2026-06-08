@@ -139,6 +139,9 @@ public class TelaRelatorios extends JFrame {
         JButton botaoRelatorioMensal = new JButton("Relatorio Mensal");
         botaoRelatorioMensal.addActionListener(e -> gerarRelatorioMensal());
 
+        JButton botaoRelatorioAnual = new JButton("Relatorio Anual");
+        botaoRelatorioAnual.addActionListener(e -> gerarRelatorioAnual());
+
         painelCampos.add(labelCpf);
         painelCampos.add(campoCpf);
         painelCampos.add(labelDataInicio);
@@ -157,6 +160,7 @@ public class TelaRelatorios extends JFrame {
         painelBotoes.add(botaoGerarPeriodo);
         painelBotoes.add(botaoIndicadorEventos);
         painelBotoes.add(botaoIndicadorPorTipo);
+        painelMensal.add(botaoRelatorioAnual);
 
         painelBusca.add(painelCampos);
         painelBusca.add(painelBotoes);
@@ -310,7 +314,7 @@ public class TelaRelatorios extends JFrame {
     }
 
     private void gerarRelatorioMensal() {
-    String anoDigitado = campoAno.getText();
+        String anoDigitado = campoAno.getText();
 
         if (anoDigitado == null || anoDigitado.isBlank()) {
             JOptionPane.showMessageDialog(
@@ -351,6 +355,48 @@ public class TelaRelatorios extends JFrame {
                         ano,
                         mesSelecionado
                     );
+
+            areaRelatorio.setText(relatorio);
+            areaRelatorio.setCaretPosition(0);
+
+        } catch (NumberFormatException exception) {
+            JOptionPane.showMessageDialog(
+                this,
+                "O ano deve conter somente numeros. Exemplo: 2026",
+                "Ano invalido",
+                JOptionPane.WARNING_MESSAGE
+            );
+        }
+    }
+
+    private void gerarRelatorioAnual() {
+        String anoDigitado = campoAno.getText();
+
+        if (anoDigitado == null || anoDigitado.isBlank()) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Informe o ano do relatorio anual.",
+                "Campo obrigatorio",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        try {
+            int ano = Integer.parseInt(anoDigitado);
+
+            if (ano < 1900 || ano > 2100) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Informe um ano valido entre 1900 e 2100.",
+                    "Ano invalido",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            String relatorio =
+                    relatorioService.gerarRelatorioInstitucionalAnual(ano);
 
             areaRelatorio.setText(relatorio);
             areaRelatorio.setCaretPosition(0);

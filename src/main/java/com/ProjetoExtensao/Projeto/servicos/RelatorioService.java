@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.time.YearMonth;
+import java.time.Month;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -333,6 +334,143 @@ public class RelatorioService {
             ));
         }
         return relatorio.toString();
+    }
+
+    public String gerarRelatorioInstitucionalAnual(int ano) {
+        if (ano < 1900 || ano > 2100) {
+            return "Informe um ano valido entre 1900 e 2100.";
+        }
+
+        List<Paciente> pacientesAtivas = pacienteRepositorio.findByAtivo(true);
+
+        if (pacientesAtivas.isEmpty()) {
+            return "Nao existem pacientes ativas cadastradas.";
+        }
+
+        int totalPacientesAtivas = pacientesAtivas.size();
+
+        StringBuilder relatorio = new StringBuilder();
+
+        relatorio.append("CONSOLIDADO ANUAL DE INDICADORES\n");
+        relatorio.append("====================================================================================================\n");
+        relatorio.append("Ano: ").append(ano).append("\n");
+        relatorio.append("Pacientes ativas consideradas: ")
+            .append(totalPacientesAtivas)
+            .append("\n");
+        relatorio.append("Observacao: calculo baseado nas pacientes atualmente ativas.\n");
+        relatorio.append("Ainda nao considera historico mensal de permanencia.\n\n");
+
+        relatorio.append(String.format(
+            "%-10s | %-11s | %-9s | %-9s | %-12s | %-8s | %-11s%n",
+            "Mes",
+            "Mortalidade",
+            "Diarreia",
+            "Escabiose",
+            "Desidratacao",
+            "Ulcera",
+            "Desnutricao"
+        ));
+
+        relatorio.append("----------------------------------------------------------------------------------------------------\n");
+
+        for (int mes = 1; mes <= 12; mes++) {
+            YearMonth anoMes = YearMonth.of(ano, mes);
+
+            LocalDate dataInicio = anoMes.atDay(1);
+            LocalDate dataFim = anoMes.atEndOfMonth();
+
+            double mortalidade = calcularPercentualPorTipoNoPeriodo(
+                EventosOcorridos.OBITO,
+                dataInicio,
+                dataFim,
+                totalPacientesAtivas
+            );
+
+            double diarreia = calcularPercentualPorTipoNoPeriodo(
+                EventosOcorridos.DIARREIA,
+                dataInicio,
+                dataFim,
+                totalPacientesAtivas
+            );
+
+            double escabiose = calcularPercentualPorTipoNoPeriodo(
+                EventosOcorridos.ESCABIOSE,
+                dataInicio,
+                dataFim,
+                totalPacientesAtivas
+            );
+
+            double desidratacao = calcularPercentualPorTipoNoPeriodo(
+                EventosOcorridos.DESIDRATACAO,
+                dataInicio,
+                dataFim,
+                totalPacientesAtivas
+            );
+
+            double ulcera = calcularPercentualPorTipoNoPeriodo(
+                EventosOcorridos.ULCERA_POR_PRESSAO,
+                dataInicio,
+                dataFim,
+                totalPacientesAtivas
+            );
+
+            double desnutricao = calcularPercentualPorTipoNoPeriodo(
+                EventosOcorridos.DESNUTRICAO,
+                dataInicio,
+                dataFim,
+                totalPacientesAtivas
+            );
+
+            relatorio.append(String.format(
+                Locale.forLanguageTag("pt-BR"),
+                "%-10s | %10.2f%% | %8.2f%% | %8.2f%% | %11.2f%% | %7.2f%% | %10.2f%%%n",
+                obterNomeMes(mes),
+                mortalidade,
+                diarreia,
+                escabiose,
+                desidratacao,
+                ulcera,
+                desnutricao
+            ));
+        }
+        return relatorio.toString();
+    }
+
+    private double calcularPercentualPorTipoNoPeriodo(
+        EventosOcorridos tipoEvento,
+        LocalDate dataInicio,
+        LocalDate dataFim,
+        int totalPacientesAtivas
+    ) {
+        List<EventoSentinela> eventos =
+            eventoSentinelaRepositorio.findByEventosOcorridosAndDataEventoBetween(
+                    tipoEvento,
+                    dataInicio,
+                    dataFim
+            );
+
+        int totalPacientesComEvento =
+            contarPacientesAtivasDistintas(eventos);
+
+        return (totalPacientesComEvento * 100.0) / totalPacientesAtivas;
+    }
+
+    private String obterNomeMes(int mes) {
+        return switch (mes) {
+            case 1 -> "Janeiro";
+            case 2 -> "Fevereiro";
+            case 3 -> "Marco";
+            case 4 -> "Abril";
+            case 5 -> "Maio";
+            case 6 -> "Junho";
+            case 7 -> "Julho";
+            case 8 -> "Agosto";
+            case 9 -> "Setembro";
+            case 10 -> "Outubro";
+            case 11 -> "Novembro";
+            case 12 -> "Dezembro";
+            default -> "Invalido";
+        };
     }
 
     private int contarPacientesAtivasDistintas(List<EventoSentinela> eventos) {
