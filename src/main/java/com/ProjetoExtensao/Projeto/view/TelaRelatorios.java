@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
+import com.ProjetoExtensao.Projeto.utils.EventosOcorridos;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -28,6 +29,7 @@ public class TelaRelatorios extends JFrame {
     private JTextField campoCpf;
     private JTextField campoDataInicio;
     private JTextField campoDataFim;
+    private JComboBox<EventosOcorridos> comboTipoEvento;
     private JTextArea areaRelatorio;
 
     private final DateTimeFormatter formatadorData =
@@ -98,6 +100,11 @@ public class TelaRelatorios extends JFrame {
         campoDataFim = new JTextField(8);
         campoDataFim.setToolTipText("Formato: dd/MM/yyyy");
 
+        JLabel labelTipoEvento = new JLabel("Tipo de evento:");
+        labelTipoEvento.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        comboTipoEvento = new JComboBox<>(EventosOcorridos.values());
+
         JButton botaoGerar = new JButton("Gerar Relatorio Geral");
         botaoGerar.addActionListener(e -> gerarRelatorio());
 
@@ -107,16 +114,22 @@ public class TelaRelatorios extends JFrame {
         JButton botaoIndicadorEventos = new JButton("Indicador de Eventos");
         botaoIndicadorEventos.addActionListener(e -> gerarIndicadorEventos());
 
+        JButton botaoIndicadorPorTipo = new JButton("Indicador por Tipo");
+        botaoIndicadorPorTipo.addActionListener(e -> gerarIndicadorPorTipo());
+
         painelCampos.add(labelCpf);
         painelCampos.add(campoCpf);
         painelCampos.add(labelDataInicio);
         painelCampos.add(campoDataInicio);
         painelCampos.add(labelDataFim);
         painelCampos.add(campoDataFim);
+        painelCampos.add(labelTipoEvento);
+        painelCampos.add(comboTipoEvento);
 
         painelBotoes.add(botaoGerar);
         painelBotoes.add(botaoGerarPeriodo);
         painelBotoes.add(botaoIndicadorEventos);
+        painelBotoes.add(botaoIndicadorPorTipo);
 
         painelBusca.add(painelCampos);
         painelBusca.add(painelBotoes);
@@ -235,4 +248,35 @@ public class TelaRelatorios extends JFrame {
             );
         }
     }
+
+    private void gerarIndicadorPorTipo() {
+        try {
+            LocalDate dataInicio =
+                    LocalDate.parse(campoDataInicio.getText(), formatadorData);
+
+            LocalDate dataFim =
+                    LocalDate.parse(campoDataFim.getText(), formatadorData);
+
+            EventosOcorridos tipoEvento =
+                    (EventosOcorridos) comboTipoEvento.getSelectedItem();
+
+            String indicador =
+                    relatorioService.gerarIndicadorPorTipoEvento(
+                            tipoEvento,
+                            dataInicio,
+                            dataFim
+                    );
+
+            areaRelatorio.setText(indicador);
+            areaRelatorio.setCaretPosition(0);
+
+        } catch (DateTimeParseException exception) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Informe as datas no formato dd/MM/yyyy. Exemplo: 01/01/2026",
+                    "Data invalida",
+                    JOptionPane.WARNING_MESSAGE
+            );
+        }
+}
 }

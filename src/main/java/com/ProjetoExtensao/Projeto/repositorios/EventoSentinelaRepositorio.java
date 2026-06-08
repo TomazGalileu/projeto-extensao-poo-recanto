@@ -3,6 +3,7 @@ package com.ProjetoExtensao.Projeto.repositorios;
 import com.ProjetoExtensao.Projeto.models.EventoSentinela;
 import com.ProjetoExtensao.Projeto.models.Paciente;
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.ProjetoExtensao.Projeto.utils.EventosOcorridos;
 
 import java.util.List;
 import java.time.LocalDate;
@@ -24,4 +25,10 @@ public interface EventoSentinelaRepositorio extends JpaRepository<EventoSentinel
         LocalDate dataInicio,
         LocalDate dataFim
     );
+
+    List<EventoSentinela> findByEventosOcorridosAndDataEventoBetween(
+        EventosOcorridos tipoEvento,
+        LocalDate dataInicio,
+        LocalDate dataFim
+    );    
 }

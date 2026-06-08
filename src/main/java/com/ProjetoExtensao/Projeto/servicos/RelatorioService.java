@@ -8,6 +8,7 @@ import com.ProjetoExtensao.Projeto.repositorios.EventoSentinelaRepositorio;
 import com.ProjetoExtensao.Projeto.repositorios.PacienteRepositorio;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.ProjetoExtensao.Projeto.utils.EventosOcorridos;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -178,6 +179,73 @@ public class RelatorioService {
             Pacientes com ao menos um evento sentinela: %d
             Percentual de pacientes com evento sentinela: %.2f%%
             """,
+            formatarData(dataInicio),
+            formatarData(dataFim),
+            totalPacientesAtivas,
+            totalPacientesComEvento,
+            percentual
+        );
+    }
+
+    public String gerarIndicadorPorTipoEvento(
+        EventosOcorridos tipoEvento,
+        LocalDate dataInicio,
+        LocalDate dataFim
+    ) {
+        if (tipoEvento == null) {
+            return "Selecione um tipo de evento.";
+        }
+
+        if (dataInicio == null || dataFim == null) {
+            return "Informe a data inicial e a data final.";
+        }
+
+        if (dataInicio.isAfter(dataFim)) {
+            return "A data inicial nao pode ser maior que a data final.";
+        }
+
+        List<Paciente> pacientesAtivas = pacienteRepositorio.findByAtivo(true);
+
+        if (pacientesAtivas.isEmpty()) {
+            return "Nao existem pacientes ativas cadastradas.";
+        }
+
+        List<EventoSentinela> eventosDoTipo =
+                eventoSentinelaRepositorio.findByEventosOcorridosAndDataEventoBetween(
+                    tipoEvento,
+                    dataInicio,
+                    dataFim
+                );
+
+        Set<Long> idsPacientesComEvento = new HashSet<>();
+
+        for (EventoSentinela evento : eventosDoTipo) {
+            Paciente paciente = evento.getPaciente();
+
+            if (paciente != null && Boolean.TRUE.equals(paciente.getAtivo())) {
+                idsPacientesComEvento.add(paciente.getId());
+            }
+        }
+
+        int totalPacientesAtivas = pacientesAtivas.size();
+        int totalPacientesComEvento = idsPacientesComEvento.size();
+
+        double percentual =
+            (totalPacientesComEvento * 100.0) / totalPacientesAtivas;
+
+        return String.format(
+            Locale.forLanguageTag("pt-BR"),
+            """
+            INDICADOR POR TIPO DE EVENTO
+            ==================================
+            Evento: %s
+            Periodo: %s ate %s
+
+            Total de pacientes ativas: %d
+            Pacientes com o evento selecionado: %d
+            Percentual de pacientes com o evento selecionado: %.2f%%
+            """,
+            tipoEvento,
             formatarData(dataInicio),
             formatarData(dataFim),
             totalPacientesAtivas,
