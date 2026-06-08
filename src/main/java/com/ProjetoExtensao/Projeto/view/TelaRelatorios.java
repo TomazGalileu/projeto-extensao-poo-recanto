@@ -29,6 +29,8 @@ public class TelaRelatorios extends JFrame {
     private JTextField campoCpf;
     private JTextField campoDataInicio;
     private JTextField campoDataFim;
+    private JTextField campoAno;
+    private JComboBox<Integer> comboMes;
     private JComboBox<EventosOcorridos> comboTipoEvento;
     private JTextArea areaRelatorio;
 
@@ -83,6 +85,9 @@ public class TelaRelatorios extends JFrame {
         JPanel painelBotoes = new JPanel(new FlowLayout(FlowLayout.LEFT));
         painelBotoes.setOpaque(false);
 
+        JPanel painelMensal = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        painelMensal.setOpaque(false);
+
         JLabel labelCpf = new JLabel("CPF:");
         labelCpf.setFont(new Font("Arial", Font.PLAIN, 14));
 
@@ -105,6 +110,20 @@ public class TelaRelatorios extends JFrame {
 
         comboTipoEvento = new JComboBox<>(EventosOcorridos.values());
 
+        JLabel labelAno = new JLabel("Ano:");
+        labelAno.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        campoAno = new JTextField(4);
+        campoAno.setToolTipText("Exemplo: 2026");
+
+        JLabel labelMes = new JLabel("Mes:");
+        labelMes.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        comboMes = new JComboBox<>(new Integer[]{
+            1, 2, 3, 4, 5, 6,
+            7, 8, 9, 10, 11, 12
+        });
+
         JButton botaoGerar = new JButton("Gerar Relatorio Geral");
         botaoGerar.addActionListener(e -> gerarRelatorio());
 
@@ -117,6 +136,9 @@ public class TelaRelatorios extends JFrame {
         JButton botaoIndicadorPorTipo = new JButton("Indicador por Tipo");
         botaoIndicadorPorTipo.addActionListener(e -> gerarIndicadorPorTipo());
 
+        JButton botaoRelatorioMensal = new JButton("Relatorio Mensal");
+        botaoRelatorioMensal.addActionListener(e -> gerarRelatorioMensal());
+
         painelCampos.add(labelCpf);
         painelCampos.add(campoCpf);
         painelCampos.add(labelDataInicio);
@@ -125,6 +147,11 @@ public class TelaRelatorios extends JFrame {
         painelCampos.add(campoDataFim);
         painelCampos.add(labelTipoEvento);
         painelCampos.add(comboTipoEvento);
+        painelMensal.add(labelAno);
+        painelMensal.add(campoAno);
+        painelMensal.add(labelMes);
+        painelMensal.add(comboMes);
+        painelMensal.add(botaoRelatorioMensal);
 
         painelBotoes.add(botaoGerar);
         painelBotoes.add(botaoGerarPeriodo);
@@ -133,12 +160,14 @@ public class TelaRelatorios extends JFrame {
 
         painelBusca.add(painelCampos);
         painelBusca.add(painelBotoes);
+        painelBusca.add(painelMensal);
+    
 
         areaRelatorio = new JTextArea();
         areaRelatorio.setEditable(false);
         areaRelatorio.setFont(new Font("Monospaced", Font.PLAIN, 14));
-        areaRelatorio.setLineWrap(true);
-        areaRelatorio.setWrapStyleWord(true);
+        areaRelatorio.setLineWrap(false);
+        areaRelatorio.setWrapStyleWord(false);
 
         JScrollPane scrollPane = new JScrollPane(areaRelatorio);
 
@@ -278,5 +307,61 @@ public class TelaRelatorios extends JFrame {
                     JOptionPane.WARNING_MESSAGE
             );
         }
-}
+    }
+
+    private void gerarRelatorioMensal() {
+    String anoDigitado = campoAno.getText();
+
+        if (anoDigitado == null || anoDigitado.isBlank()) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Informe o ano do relatorio mensal.",
+                "Campo obrigatorio",
+                JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
+        try {
+            int ano = Integer.parseInt(anoDigitado);
+            Integer mesSelecionado = (Integer) comboMes.getSelectedItem();
+
+            if (ano < 1900 || ano > 2100) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Informe um ano valido entre 1900 e 2100.",
+                    "Ano invalido",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            if (mesSelecionado == null) {
+                JOptionPane.showMessageDialog(
+                    this,
+                    "Selecione um mes.",
+                    "Campo obrigatorio",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
+            String relatorio =
+                    relatorioService.gerarRelatorioInstitucionalMensal(
+                        ano,
+                        mesSelecionado
+                    );
+
+            areaRelatorio.setText(relatorio);
+            areaRelatorio.setCaretPosition(0);
+
+        } catch (NumberFormatException exception) {
+            JOptionPane.showMessageDialog(
+                this,
+                "O ano deve conter somente numeros. Exemplo: 2026",
+                "Ano invalido",
+                JOptionPane.WARNING_MESSAGE
+            );
+        }
+    }
 }

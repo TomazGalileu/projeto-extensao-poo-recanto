@@ -18,6 +18,9 @@ import java.util.Optional;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.time.YearMonth;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 public class RelatorioService {
@@ -252,6 +255,97 @@ public class RelatorioService {
             totalPacientesComEvento,
             percentual
         );
+    }
+
+    public String gerarRelatorioInstitucionalMensal(int ano, int mes) {
+        if (mes < 1 || mes > 12) {
+            return "Informe um mes valido entre 1 e 12.";
+        }
+
+        YearMonth anoMes = YearMonth.of(ano, mes);
+
+        LocalDate dataInicio = anoMes.atDay(1);
+        LocalDate dataFim = anoMes.atEndOfMonth();
+
+        List<Paciente> pacientesAtivas = pacienteRepositorio.findByAtivo(true);
+
+        if (pacientesAtivas.isEmpty()) {
+            return "Nao existem pacientes ativas cadastradas.";
+        }
+
+        int totalPacientesAtivas = pacientesAtivas.size();
+
+        Map<String, EventosOcorridos> indicadores = new LinkedHashMap<>();
+
+        indicadores.put("Taxa de mortalidade", EventosOcorridos.OBITO);
+        indicadores.put("Doenca diarreica aguda", EventosOcorridos.DIARREIA);
+        indicadores.put("Escabiose", EventosOcorridos.ESCABIOSE);
+        indicadores.put("Desidratacao", EventosOcorridos.DESIDRATACAO);
+        indicadores.put("Ulcera por pressao", EventosOcorridos.ULCERA_POR_PRESSAO);
+        indicadores.put("Desnutricao", EventosOcorridos.DESNUTRICAO);
+
+        StringBuilder relatorio = new StringBuilder();
+
+        relatorio.append("RELATORIO INSTITUCIONAL MENSAL\n");
+        relatorio.append("============================================================\n");
+        relatorio.append("Periodo: ")
+            .append(formatarData(dataInicio))
+            .append(" ate ")
+            .append(formatarData(dataFim))
+            .append("\n");
+
+        relatorio.append("Pacientes ativas consideradas: ")
+            .append(totalPacientesAtivas)
+            .append("\n");
+
+        relatorio.append("Observacao: calculo baseado nas pacientes atualmente ativas.\n");
+        relatorio.append("Ainda nao considera historico mensal de permanencia.\n\n");
+
+        relatorio.append(String.format(
+            "%-32s | %-5s | %-10s%n",
+            "Indicador",
+            "Casos",
+            "Taxa"
+        ));
+
+        relatorio.append("------------------------------------------------------------\n");
+
+        for (Map.Entry<String, EventosOcorridos> indicador : indicadores.entrySet()) {
+            List<EventoSentinela> eventos =
+                 eventoSentinelaRepositorio.findByEventosOcorridosAndDataEventoBetween(
+                    indicador.getValue(),
+                    dataInicio,
+                    dataFim
+                );
+
+            int quantidadePacientesComEvento =
+                contarPacientesAtivasDistintas(eventos);
+
+            double percentual =
+                (quantidadePacientesComEvento * 100.0) / totalPacientesAtivas;
+
+            relatorio.append(String.format(
+                Locale.forLanguageTag("pt-BR"),
+                "%-32s | %-5d | %6.2f%%%n",
+                indicador.getKey(),
+                quantidadePacientesComEvento,
+                percentual
+            ));
+        }
+        return relatorio.toString();
+    }
+
+    private int contarPacientesAtivasDistintas(List<EventoSentinela> eventos) {
+        Set<Long> idsPacientes = new HashSet<>();
+
+        for (EventoSentinela evento : eventos) {
+            Paciente paciente = evento.getPaciente();
+
+            if (paciente != null && Boolean.TRUE.equals(paciente.getAtivo())) {
+                idsPacientes.add(paciente.getId());
+            }
+        }
+        return idsPacientes.size();
     }
 
     private void adicionarDadosPessoais(StringBuilder relatorio, Paciente paciente) {
