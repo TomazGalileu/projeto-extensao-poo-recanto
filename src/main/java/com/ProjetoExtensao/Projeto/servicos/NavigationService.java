@@ -37,6 +37,22 @@ public class NavigationService {
     @Autowired
     private TelaEventosSentinelas telaEventosSentinelas;
 
+    @Lazy
+    @Autowired
+    private TelaVacinas telaVacinas;
+
+    @Lazy
+    @Autowired
+    private TelaIndicadores telaIndicadores;
+
+    @Lazy
+    @Autowired
+    private TelaCadastroVacina telaCadastroVacina;
+
+    @Lazy
+    @Autowired
+    private TelaRelatorioIndividual telaRelatorioIndividual;
+
     public void abrirTelaLogin(){
         telaLogin.setVisible(true);
     }
@@ -70,5 +86,23 @@ public class NavigationService {
     public void abrirTelaEventosSentinelas() {
         telaEventosSentinelas.limparCampos();
         telaEventosSentinelas.setVisible(true);
+    }
+
+    public void abrirTelaVacinas() {
+        telaVacinas.setVisible(true);
+    }
+
+    public void abrirTelaIndicadores() {
+        telaIndicadores.setVisible(true);
+    }
+    
+    public void abrirTelaCadastroVacina() {
+        telaCadastroVacina.limparCampos();
+        telaCadastroVacina.setVisible(true);
+    }
+
+    public void abrirTelaRelatorioIndividual() {
+        telaRelatorioIndividual.limparCampos();
+        telaRelatorioIndividual.setVisible(true);
     }
 }
