@@ -38,6 +38,7 @@ public class TelaCadastroEventoSentinela extends JFrame {
     private JTextField txtDescricao;
     private JFormattedTextField txtDataEvento;
     private Paciente pacienteAtual = null;
+    private JLabel lblPercentualEventos;
 
     @PostConstruct
     public void initUI() {

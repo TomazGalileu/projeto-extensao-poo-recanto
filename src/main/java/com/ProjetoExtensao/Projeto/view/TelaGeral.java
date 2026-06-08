@@ -15,13 +15,15 @@ import java.awt.*;
 @org.springframework.stereotype.Component
 @NoArgsConstructor
 public class TelaGeral extends JFrame {
+
     @Autowired
     private PanelsFactory panelsFactory;
+
     @Autowired
     private IconManager iconManager;
+
     @Autowired
     private NavigationService navigationService;
-
 
     @PostConstruct
     private void initUI() {
@@ -64,27 +66,42 @@ public class TelaGeral extends JFrame {
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
 
-        JPanel gridPanel = new JPanel(new GridLayout(2, 4, 20, 20));
+        JPanel gridPanel = new JPanel(new GridLayout(3, 3, 20, 20));
         gridPanel.setOpaque(false);
 
-        // Botão Pacientes
         JButton btnPacientes = createDashboardButton("Pacientes", "pacientes.png");
         btnPacientes.addActionListener(e -> {
             navigationService.abrirTelaPacientes();
             dispose();
         });
 
-        // Botão Consultas
         JButton btnConsultas = createDashboardButton("Consultas", "consultas.png");
         btnConsultas.addActionListener(e -> {
             navigationService.abrirTelaConsultas();
             dispose();
         });
 
-        // Botão Eventos Sentinelas
         JButton btnEventos = createDashboardButton("Eventos Sentinelas", "eventos.png");
         btnEventos.addActionListener(e -> {
             navigationService.abrirTelaEventosSentinelas();
+            dispose();
+        });
+
+        JButton btnVacinas = createDashboardButton("Vacinas", "vacinas.png");
+        btnVacinas.addActionListener(e -> {
+            navigationService.abrirTelaVacinas();
+            dispose();
+        });
+
+        JButton btnRelatorios = createDashboardButton("Relatórios", "relatorios.png");
+        btnRelatorios.addActionListener(e -> {
+            navigationService.abrirTelaRelatorios();
+            dispose();
+        });
+
+        JButton btnIndicadores = createDashboardButton("Indicadores", "relatorios.png");
+        btnIndicadores.addActionListener(e -> {
+            navigationService.abrirTelaIndicadores();
             dispose();
         });
 
@@ -94,15 +111,9 @@ public class TelaGeral extends JFrame {
         gridPanel.add(btnEventos);
         gridPanel.add(createDashboardButton("Prontuários", "prontuarios.png"));
         gridPanel.add(btnConsultas);
-        gridPanel.add(createDashboardButton("Vacinas", "vacinas.png"));
-        
-        JButton btnRelatorios = createDashboardButton("Relatorios", "relatorios.png");
-        btnRelatorios.addActionListener(e -> {
-            navigationService.abrirTelaRelatorios();
-            dispose();
-        });
-
+        gridPanel.add(btnVacinas);
         gridPanel.add(btnRelatorios);
+        gridPanel.add(btnIndicadores);
 
         mainPanel.add(gridPanel, BorderLayout.CENTER);
 
@@ -131,7 +142,11 @@ public class TelaGeral extends JFrame {
     }
 
     private JButton createDashboardButton(String text, String iconName) {
-        ImageIcon icon = iconManager.createScaledIcon("/images/" + iconName, 48, 48);
+        ImageIcon icon = iconManager.createScaledIcon(
+                "/images/" + iconName,
+                48,
+                48
+        );
 
         JButton button = new JButton(text, icon);
         button.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -139,7 +154,9 @@ public class TelaGeral extends JFrame {
         button.setFont(new Font("Arial", Font.PLAIN, 14));
         button.setForeground(Cores.COR_LETRA_PAINEL);
         button.setBackground(Color.WHITE);
-        button.setBorder(BorderFactory.createLineBorder(new Color(0xDDDDDD)));
+        button.setBorder(
+                BorderFactory.createLineBorder(new Color(0xDDDDDD))
+        );
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 

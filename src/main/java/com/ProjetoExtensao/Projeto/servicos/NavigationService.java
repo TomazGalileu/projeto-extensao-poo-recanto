@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 @NoArgsConstructor
 public class NavigationService {
+
     @Lazy
     @Autowired
     private TelaLogin telaLogin;
@@ -21,16 +22,16 @@ public class NavigationService {
     @Autowired
     private TelaPacientes telaPacientes;
 
-    @Autowired
     @Lazy
+    @Autowired
     private TelaCadastroPacientes telaCadastroPacientes;
 
     @Lazy
     @Autowired
     private TelaConsultas consulta;
 
-    @Autowired
     @Lazy
+    @Autowired
     private TelaAgendamentoConsulta telaAgendamentoConsulta;
 
     @Lazy
@@ -41,7 +42,23 @@ public class NavigationService {
     @Autowired
     private TelaRelatorios telaRelatorios;
 
-    public void abrirTelaLogin(){
+    @Lazy
+    @Autowired
+    private TelaVacinas telaVacinas;
+
+    @Lazy
+    @Autowired
+    private TelaIndicadores telaIndicadores;
+
+    @Lazy
+    @Autowired
+    private TelaCadastroVacina telaCadastroVacina;
+
+    @Lazy
+    @Autowired
+    private TelaRelatorioIndividual telaRelatorioIndividual;
+
+    public void abrirTelaLogin() {
         telaLogin.setVisible(true);
     }
 
@@ -77,6 +94,24 @@ public class NavigationService {
     }
 
     public void abrirTelaRelatorios() {
-    telaRelatorios.setVisible(true);
+        telaRelatorios.setVisible(true);
+    }
+
+    public void abrirTelaVacinas() {
+        telaVacinas.setVisible(true);
+    }
+
+    public void abrirTelaIndicadores() {
+        telaIndicadores.setVisible(true);
+    }
+
+    public void abrirTelaCadastroVacina() {
+        telaCadastroVacina.limparCampos();
+        telaCadastroVacina.setVisible(true);
+    }
+
+    public void abrirTelaRelatorioIndividual() {
+        telaRelatorioIndividual.limparCampos();
+        telaRelatorioIndividual.setVisible(true);
     }
 }

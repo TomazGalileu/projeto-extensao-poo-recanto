@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PacienteRepositorio extends JpaRepository<Paciente, Long> {
+
     List<Paciente> findByNomeCompletoContainingIgnoreCase(String nome);
 
     List<Paciente> findByCpfContaining(String cpf);
 
     Optional<Paciente> findByCpf(String cpf);
 
-    // Buscar pacientes por status (ativo/inativo)
     List<Paciente> findByAtivo(Boolean ativo);
+
+    long countByAtivo(Boolean ativo);
 }
