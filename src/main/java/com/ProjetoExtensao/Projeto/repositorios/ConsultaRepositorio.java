@@ -12,4 +12,6 @@ public interface ConsultaRepositorio extends JpaRepository<Consulta, Long> {
     
     // Buscar todas as consultas de um paciente
     List<Consulta> findAllByPaciente(Paciente paciente);
+
+    List<Consulta> findAllByPacienteOrderByDataDescHoraDesc(Paciente paciente);
 }

@@ -70,8 +70,14 @@ public class TelaPacientes extends JFrame {
         btnAdicionar.setPreferredSize(new Dimension(180, 40));
         btnAdicionar.addActionListener(e -> navigationService.abrirTelaCadastroPacientes());
 
-        JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        JButton btnProntuario = new JButton("Prontuário");
+        estilizarBotao(btnProntuario);
+        btnProntuario.setPreferredSize(new Dimension(140, 40));
+        btnProntuario.addActionListener(e -> abrirProntuarioPacienteSelecionado());
+
+        JPanel painelBotao = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         painelBotao.setOpaque(false);
+        painelBotao.add(btnProntuario);
         painelBotao.add(btnAdicionar);
 
         linhaTitulo.add(painelLabel, BorderLayout.WEST);
@@ -264,6 +270,17 @@ public class TelaPacientes extends JFrame {
 
             modeloTabela.addRow(linha);
         }
+    }
+
+    private void abrirProntuarioPacienteSelecionado() {
+        int row = tabelaPacientes.getSelectedRow();
+        if (row == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione uma paciente para abrir o prontuário.", "Paciente não selecionada", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Long pacienteId = Long.parseLong(modeloTabela.getValueAt(row, 0).toString());
+        navigationService.abrirTelaProntuarioPaciente(pacienteId);
     }
 
     // Método para atualizar a tabela com os dados mais recentes
