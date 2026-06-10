@@ -39,6 +39,12 @@ public class Consulta {
     @Column(columnDefinition = "TEXT")
     private String motivoConsulta;
 
+    @Column(length = 30)
+    private String tipoEncaminhamento;
+
+    @Column(columnDefinition = "TEXT")
+    private String encaminhamento;
+
     @Column(columnDefinition = "TEXT")
     private String diagnostico;
 

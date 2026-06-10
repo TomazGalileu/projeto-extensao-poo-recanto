@@ -78,4 +78,73 @@ public class ConsultaService {
 
         return consultaRepositorio.save(consulta);
     }
+
+    public Consulta registrarEncaminhamento(
+        Long consultaId,
+        String tipoEncaminhamento,
+        String encaminhamento
+    ) {
+        Consulta consulta =
+                findConsultaById(consultaId);
+
+        if (
+                tipoEncaminhamento == null
+                        || tipoEncaminhamento.isBlank()
+        ) {
+            throw new RuntimeException(
+                    "Selecione o tipo de encaminhamento."
+            );
+        }
+
+        if (
+                encaminhamento == null
+                        || encaminhamento.isBlank()
+        ) {
+            throw new RuntimeException(
+                    "Informe a descrição do encaminhamento."
+            );
+        }
+
+        consulta.setTipoEncaminhamento(
+                tipoEncaminhamento.trim()
+        );
+
+        consulta.setEncaminhamento(
+                encaminhamento.trim()
+        );
+
+        return consultaRepositorio.save(consulta);
+    }
+    public List<Consulta> buscarConsultasPorData(
+        LocalDate data
+    ) {
+        if (data == null) {
+            throw new RuntimeException(
+                    "Informe a data da consulta."
+            );
+        }
+
+        return consultaRepositorio
+                .findAllByDataOrderByHoraAsc(
+                        data
+                );
+    }
+
+    public List<Consulta> buscarConsultasPorProfissional(
+            String nomeProfissional
+    ) {
+        if (
+                nomeProfissional == null
+                        || nomeProfissional.isBlank()
+        ) {
+            throw new RuntimeException(
+                    "Informe o nome do profissional."
+            );
+        }
+
+        return consultaRepositorio
+                .findAllByResponsavelSaude_NomeCompletoContainingIgnoreCaseOrderByDataDescHoraDesc(
+                        nomeProfissional.trim()
+                );
+    }
 }

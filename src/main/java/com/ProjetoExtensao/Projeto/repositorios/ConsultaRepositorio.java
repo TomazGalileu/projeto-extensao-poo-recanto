@@ -24,6 +24,14 @@ public interface ConsultaRepositorio extends JpaRepository<Consulta, Long> {
 
     // Buscar consultas ordenadas da mais recente para a mais antiga
     List<Consulta> findAllByPacienteOrderByDataDescHoraDesc(
-            Paciente paciente
+                Paciente paciente
+    );
+    List<Consulta> findAllByDataOrderByHoraAsc(
+                LocalDate data
+    );
+
+    List<Consulta>
+        findAllByResponsavelSaude_NomeCompletoContainingIgnoreCaseOrderByDataDescHoraDesc(
+                String nomeCompleto
     );
 }

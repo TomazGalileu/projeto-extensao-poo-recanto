@@ -21,6 +21,8 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 @org.springframework.stereotype.Component
 @NoArgsConstructor
@@ -45,6 +47,8 @@ public class TelaConsultas extends JFrame {
     private JTextField diagnosticoField;
     private JTextArea triagemArea;
     private JTextArea medicacaoArea;
+    private JTextField tipoEncaminhamentoField;
+    private JTextArea encaminhamentoArea;
 
     // Tabela de consultas
     private JTable tabelaConsultas;
@@ -55,6 +59,7 @@ public class TelaConsultas extends JFrame {
 
     // Campos de pesquisa
     private JTextField pacientCpfField;
+    private JTextField dataPesquisaField;
     private JTextField medicoPesquisaField;
     private JPanel pesquisaPanel;
     private JButton refreshButton;
@@ -152,6 +157,38 @@ public class TelaConsultas extends JFrame {
 
         sectionButtonsPanel.add(registrarAtendimentoBtn);
 
+        JButton registrarEncaminhamentoBtn =
+                new JButton("Registrar Encaminhamento");
+
+        registrarEncaminhamentoBtn.setFont(
+                new Font("Arial", Font.BOLD, 16)
+        );
+
+        registrarEncaminhamentoBtn.setBackground(
+                azulEscuro
+        );
+
+        registrarEncaminhamentoBtn.setForeground(
+                Color.WHITE
+        );
+
+        registrarEncaminhamentoBtn.setBorder(
+                BorderFactory.createEmptyBorder(
+                        10,
+                        15,
+                        10,
+                        15
+                )
+        );
+
+        registrarEncaminhamentoBtn.setFocusPainted(false);
+
+        registrarEncaminhamentoBtn.addActionListener(
+                e -> registrarEncaminhamentoConsultaSelecionada()
+        );
+
+        sectionButtonsPanel.add(registrarEncaminhamentoBtn);
+
         // Ação do botão "Nova Consulta"
         novaConsultaBtn.addActionListener(e -> {
             navigationService.abrirTelaAgendamentoConsultas();
@@ -169,7 +206,7 @@ public class TelaConsultas extends JFrame {
         Border innerBorder = new EmptyBorder(20, 20, 20, 20);
         pesquisaPanel.setBorder(innerBorder);
         pesquisaPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        pesquisaPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 150));
+        pesquisaPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 230));
 
         // Painel para o título com fundo E3E0E0
         JPanel tituloPesquisaPanel = new JPanel(new BorderLayout());
@@ -220,6 +257,165 @@ public class TelaConsultas extends JFrame {
         pesquisarBtn.setFocusPainted(false);
         pesquisarBtn.setBorder(new EmptyBorder(8, 15, 8, 15));
         pesquisaPanel.add(pesquisarBtn, gbc);
+
+        // Linha de filtros adicionais
+        gbc.gridy = 3;
+        gbc.gridx = 0;
+        gbc.gridwidth = 1;
+        gbc.weightx = 0.5;
+
+        JLabel dataPesquisaLabel =
+                new JLabel("Data da Consulta");
+
+        dataPesquisaLabel.setFont(
+                new Font("Arial", Font.BOLD, 14)
+        );
+
+        dataPesquisaLabel.setForeground(
+                azulEscuro
+        );
+
+        pesquisaPanel.add(
+                dataPesquisaLabel,
+                gbc
+        );
+
+        gbc.gridx = 1;
+
+        JLabel medicoPesquisaLabel =
+                new JLabel("Nome do Profissional");
+
+        medicoPesquisaLabel.setFont(
+                new Font("Arial", Font.BOLD, 14)
+        );
+
+        medicoPesquisaLabel.setForeground(
+                azulEscuro
+        );
+
+        pesquisaPanel.add(
+                medicoPesquisaLabel,
+                gbc
+        );
+
+        // Campos dos filtros adicionais
+        gbc.gridy = 4;
+        gbc.gridx = 0;
+
+        dataPesquisaField =
+                new JTextField();
+
+        dataPesquisaField.setFont(
+                new Font("Arial", Font.PLAIN, 16)
+        );
+
+        dataPesquisaField.setForeground(
+                azulEscuro
+        );
+
+        addPlaceholder(
+                dataPesquisaField,
+                "dd/MM/yyyy"
+        );
+
+        pesquisaPanel.add(
+                dataPesquisaField,
+                gbc
+        );
+
+        gbc.gridx = 1;
+
+        medicoPesquisaField =
+                new JTextField();
+
+        medicoPesquisaField.setFont(
+                new Font("Arial", Font.PLAIN, 16)
+        );
+
+        medicoPesquisaField.setForeground(
+                azulEscuro
+        );
+
+        addPlaceholder(
+                medicoPesquisaField,
+                "Nome do Profissional"
+        );
+
+        pesquisaPanel.add(
+                medicoPesquisaField,
+                gbc
+        );
+
+        // Botões dos filtros adicionais
+        gbc.gridx = 2;
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.weightx = 0.0;
+
+        JPanel painelBotoesFiltros =
+                new JPanel(
+                        new FlowLayout(
+                                FlowLayout.LEFT,
+                                5,
+                                0
+                        )
+                );
+
+        painelBotoesFiltros.setOpaque(false);
+
+        JButton buscarPorDataBtn =
+                new JButton("Buscar por Data");
+
+        buscarPorDataBtn.setFont(
+                new Font("Arial", Font.BOLD, 14)
+        );
+
+        buscarPorDataBtn.setBackground(
+                azulEscuro
+        );
+
+        buscarPorDataBtn.setForeground(
+                Color.WHITE
+        );
+
+        buscarPorDataBtn.setFocusPainted(false);
+
+        JButton buscarPorProfissionalBtn =
+                new JButton("Buscar por Profissional");
+
+        buscarPorProfissionalBtn.setFont(
+                new Font("Arial", Font.BOLD, 14)
+        );
+
+        buscarPorProfissionalBtn.setBackground(
+                azulEscuro
+        );
+
+        buscarPorProfissionalBtn.setForeground(
+                Color.WHITE
+        );
+
+        buscarPorProfissionalBtn.setFocusPainted(false);
+
+        painelBotoesFiltros.add(
+                buscarPorDataBtn
+        );
+
+        painelBotoesFiltros.add(
+                buscarPorProfissionalBtn
+        );
+
+        pesquisaPanel.add(
+                painelBotoesFiltros,
+                gbc
+        );
+
+        buscarPorDataBtn.addActionListener(
+                e -> buscarConsultasPorData()
+        );
+
+        buscarPorProfissionalBtn.addActionListener(
+                e -> buscarConsultasPorProfissional()
+        );
 
         contentPanel.add(pesquisaPanel);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
@@ -452,6 +648,109 @@ public class TelaConsultas extends JFrame {
         medicacaoArea.setEditable(false);
         medicacaoArea.setBorder(BorderFactory.createLineBorder(borderColor));
         detalhesPanel.add(medicacaoArea, gbc);
+        
+        // Linha 7: Tipo de encaminhamento
+        gbc.gridy = 13;
+        gbc.gridx = 0;
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(10, 0, 0, 0);
+
+        JLabel tipoEncaminhamentoLabel =
+                new JLabel("Tipo de Encaminhamento:");
+
+        tipoEncaminhamentoLabel.setFont(
+                new Font("Arial", Font.BOLD, 14)
+        );
+
+        tipoEncaminhamentoLabel.setForeground(
+                azulEscuro
+        );
+
+        detalhesPanel.add(
+                tipoEncaminhamentoLabel,
+                gbc
+        );
+
+        gbc.gridy = 14;
+        gbc.insets = new Insets(0, 0, 20, 0);
+
+        tipoEncaminhamentoField =
+                new JTextField();
+
+        tipoEncaminhamentoField.setFont(
+                new Font("Arial", Font.PLAIN, 16)
+        );
+
+        tipoEncaminhamentoField.setBackground(
+                Color.WHITE
+        );
+
+        tipoEncaminhamentoField.setEditable(false);
+
+        tipoEncaminhamentoField.setBorder(
+                BorderFactory.createLineBorder(
+                        borderColor
+                )
+        );
+
+        detalhesPanel.add(
+                tipoEncaminhamentoField,
+                gbc
+        );
+
+        // Linha 8: Descrição do encaminhamento
+        gbc.gridy = 15;
+        gbc.insets = new Insets(10, 0, 0, 0);
+
+        JLabel encaminhamentoLabel =
+                new JLabel("Encaminhamento:");
+
+        encaminhamentoLabel.setFont(
+                new Font("Arial", Font.BOLD, 14)
+        );
+
+        encaminhamentoLabel.setForeground(
+                azulEscuro
+        );
+
+        detalhesPanel.add(
+                encaminhamentoLabel,
+                gbc
+        );
+
+        gbc.gridy = 16;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(0, 0, 20, 0);
+        gbc.weighty = 0.5;
+
+        encaminhamentoArea =
+                new JTextArea(5, 20);
+
+        encaminhamentoArea.setFont(
+                new Font("Arial", Font.PLAIN, 16)
+        );
+
+        encaminhamentoArea.setBackground(
+                Color.WHITE
+        );
+
+        encaminhamentoArea.setLineWrap(true);
+        encaminhamentoArea.setWrapStyleWord(true);
+        encaminhamentoArea.setEditable(false);
+
+        encaminhamentoArea.setBorder(
+                BorderFactory.createLineBorder(
+                        borderColor
+                )
+        );
+
+        detalhesPanel.add(
+                encaminhamentoArea,
+                gbc
+        );
 
         // Adicionar scroll ao painel de detalhes
         JScrollPane scrollPane = new JScrollPane(detalhesPanel);
@@ -550,6 +849,21 @@ public class TelaConsultas extends JFrame {
         if (medicacaoArea != null) {
             medicacaoArea.setText(consulta.getAnotacoesMedico() != null ? consulta.getAnotacoesMedico() : "");
         }
+        if (tipoEncaminhamentoField != null) {
+            tipoEncaminhamentoField.setText(
+                    consulta.getTipoEncaminhamento() != null
+                            ? consulta.getTipoEncaminhamento()
+                            : ""
+            );
+        }
+
+        if (encaminhamentoArea != null) {
+            encaminhamentoArea.setText(
+                    consulta.getEncaminhamento() != null
+                            ? consulta.getEncaminhamento()
+                            : ""
+            );
+        }
     }
 
     // Método para limpar os campos da seção Detalhes da Consulta
@@ -564,6 +878,8 @@ public class TelaConsultas extends JFrame {
         diagnosticoField.setText("");
         triagemArea.setText("");
         medicacaoArea.setText("");
+        tipoEncaminhamentoField.setText("");
+        encaminhamentoArea.setText("");
 
         // Garantir que a cor do texto seja azul escuro ao limpar os campos para futura digitação/carregamento
         if (consultaNumField != null) consultaNumField.setForeground(Cores.COR_RODAPE);
@@ -575,6 +891,17 @@ public class TelaConsultas extends JFrame {
         if (diagnosticoField != null) diagnosticoField.setForeground(Cores.COR_RODAPE);
         if (triagemArea != null) triagemArea.setForeground(Cores.COR_RODAPE);
         if (medicacaoArea != null) medicacaoArea.setForeground(Cores.COR_RODAPE);
+        if (tipoEncaminhamentoField != null) {
+            tipoEncaminhamentoField.setForeground(
+                    Cores.COR_RODAPE
+            );
+        }
+
+        if (encaminhamentoArea != null) {
+            encaminhamentoArea.setForeground(
+                    Cores.COR_RODAPE
+            );
+        }
 
         if (pesquisaPanel != null) {
             pesquisaPanel.setBackground(Cores.COR_FUNDO_CLARO); // Volta para a cor original
@@ -614,8 +941,31 @@ public class TelaConsultas extends JFrame {
     private void limparCamposPesquisa() {
         if (pacientCpfField != null) {
             pacientCpfField.setText("");
-            addPlaceholder(pacientCpfField, "CPF do Paciente");
+
+            addPlaceholder(
+                    pacientCpfField,
+                    "CPF do Paciente"
+            );
         }
+
+        if (dataPesquisaField != null) {
+            dataPesquisaField.setText("");
+
+            addPlaceholder(
+                    dataPesquisaField,
+                    "dd/MM/yyyy"
+            );
+        }
+
+        if (medicoPesquisaField != null) {
+            medicoPesquisaField.setText("");
+
+            addPlaceholder(
+                    medicoPesquisaField,
+                    "Nome do Profissional"
+            );
+        }
+
         limparCamposDetalhes();
     }
 
@@ -734,6 +1084,279 @@ public class TelaConsultas extends JFrame {
                     "Erro ao registrar atendimento",
                     JOptionPane.ERROR_MESSAGE
             );
+        }
+    }
+    private void registrarEncaminhamentoConsultaSelecionada() {
+        if (consultaSelecionada == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Pesquise e selecione uma consulta antes de registrar o encaminhamento.",
+                    "Consulta não selecionada",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        String[] tipos = {
+                "Exame",
+                "Especialista"
+        };
+
+        JComboBox<String> campoTipo =
+                new JComboBox<>(tipos);
+
+        JTextArea campoDescricao =
+                new JTextArea(5, 35);
+
+        campoDescricao.setLineWrap(true);
+        campoDescricao.setWrapStyleWord(true);
+
+        if (consultaSelecionada.getTipoEncaminhamento() != null) {
+            campoTipo.setSelectedItem(
+                    consultaSelecionada
+                            .getTipoEncaminhamento()
+            );
+        }
+
+        if (consultaSelecionada.getEncaminhamento() != null) {
+            campoDescricao.setText(
+                    consultaSelecionada
+                            .getEncaminhamento()
+            );
+        }
+
+        Object[] campos = {
+                "Tipo de encaminhamento:",
+                campoTipo,
+                "Descrição:",
+                new JScrollPane(campoDescricao)
+        };
+
+        int resultado =
+                JOptionPane.showConfirmDialog(
+                        this,
+                        campos,
+                        "Registrar Encaminhamento",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE
+                );
+
+        if (resultado != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        try {
+            consultaSelecionada =
+                    consultaService
+                            .registrarEncaminhamento(
+                                    consultaSelecionada.getId(),
+                                    campoTipo
+                                            .getSelectedItem()
+                                            .toString(),
+                                    campoDescricao
+                                            .getText()
+                            );
+
+            atualizarDadosConsulta(
+                    consultaSelecionada
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Encaminhamento registrado com sucesso.",
+                    "Sucesso",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (RuntimeException exception) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    exception.getMessage(),
+                    "Erro ao registrar encaminhamento",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void buscarConsultasPorData() {
+        String dataDigitada =
+                dataPesquisaField.getText();
+
+        if (
+                dataDigitada == null
+                        || dataDigitada.isBlank()
+                        || dataDigitada.equals("dd/MM/yyyy")
+        ) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Informe a data da consulta no formato dd/MM/yyyy.",
+                    "Data obrigatória",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        try {
+            LocalDate data =
+                    LocalDate.parse(
+                            dataDigitada.trim(),
+                            DateTimeFormatter.DATE_TIME_FORMATTER
+                    );
+
+            List<Consulta> consultas =
+                    consultaService
+                            .buscarConsultasPorData(
+                                    data
+                            );
+
+            mostrarResultadosFiltro(
+                    consultas,
+                    "Consultas da data "
+                            + data.format(
+                            DateTimeFormatter.DATE_TIME_FORMATTER
+                    )
+            );
+
+        } catch (DateTimeParseException exception) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Informe uma data válida no formato dd/MM/yyyy.",
+                    "Data inválida",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+        } catch (RuntimeException exception) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    exception.getMessage(),
+                    "Erro ao buscar consultas",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void buscarConsultasPorProfissional() {
+        String nomeProfissional =
+                medicoPesquisaField.getText();
+
+        if (
+                nomeProfissional == null
+                        || nomeProfissional.isBlank()
+                        || nomeProfissional.equals(
+                        "Nome do Profissional"
+                )
+        ) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Informe o nome do profissional.",
+                    "Profissional obrigatório",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        try {
+            List<Consulta> consultas =
+                    consultaService
+                            .buscarConsultasPorProfissional(
+                                    nomeProfissional
+                            );
+
+            mostrarResultadosFiltro(
+                    consultas,
+                    "Consultas do profissional: "
+                            + nomeProfissional.trim()
+            );
+
+        } catch (RuntimeException exception) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    exception.getMessage(),
+                    "Erro ao buscar consultas",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void mostrarResultadosFiltro(
+            List<Consulta> consultas,
+            String tituloBusca
+    ) {
+        if (
+                consultas == null
+                        || consultas.isEmpty()
+        ) {
+            limparCamposDetalhes();
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Nenhuma consulta encontrada.",
+                    "Sem resultados",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            return;
+        }
+
+        if (consultas.size() == 1) {
+            atualizarDadosConsulta(
+                    consultas.get(0)
+            );
+
+            return;
+        }
+
+        String[] opcoes =
+                new String[consultas.size()];
+
+        for (int i = 0; i < consultas.size(); i++) {
+            Consulta consulta =
+                    consultas.get(i);
+
+            opcoes[i] =
+                    String.format(
+                            "Consulta %d - %s - Dr(a). %s - %s às %s",
+                            consulta.getId(),
+                            consulta.getPaciente()
+                                    .getNomeCompleto(),
+                            consulta.getResponsavelSaude()
+                                    .getNomeCompleto(),
+                            consulta.getData()
+                                    .format(
+                                            DateTimeFormatter
+                                                    .DATE_TIME_FORMATTER
+                                    ),
+                            consulta.getHora()
+                    );
+        }
+
+        String escolha =
+                (String) JOptionPane.showInputDialog(
+                        this,
+                        tituloBusca
+                                + "\n\nSelecione uma consulta:",
+                        "Selecionar Consulta",
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        opcoes,
+                        opcoes[0]
+                );
+
+        if (escolha == null) {
+            return;
+        }
+
+        for (int i = 0; i < opcoes.length; i++) {
+            if (opcoes[i].equals(escolha)) {
+                atualizarDadosConsulta(
+                        consultas.get(i)
+                );
+
+                return;
+            }
         }
     }
 }
