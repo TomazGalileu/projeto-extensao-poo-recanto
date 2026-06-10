@@ -3,9 +3,11 @@ package com.ProjetoExtensao.Projeto.view;
 import com.ProjetoExtensao.Projeto.infra.Cores;
 import com.ProjetoExtensao.Projeto.models.EventoSentinela;
 import com.ProjetoExtensao.Projeto.models.Paciente;
+import com.ProjetoExtensao.Projeto.models.Prescricao;
 import com.ProjetoExtensao.Projeto.models.Vacina;
 import com.ProjetoExtensao.Projeto.servicos.EventoSentinelaService;
 import com.ProjetoExtensao.Projeto.servicos.PacienteService;
+import com.ProjetoExtensao.Projeto.servicos.ProntuarioMedicoService;
 import com.ProjetoExtensao.Projeto.servicos.RelatorioPdfService;
 import com.ProjetoExtensao.Projeto.servicos.VacinaService;
 import com.ProjetoExtensao.Projeto.utils.CPFUtils;
@@ -42,6 +44,9 @@ public class TelaRelatorioIndividual extends JFrame {
     @Autowired
     private RelatorioPdfService relatorioPdfService;
 
+    @Autowired
+    private ProntuarioMedicoService prontuarioMedicoService;
+
     private JFormattedTextField txtCpf;
     private JFormattedTextField txtDataInicial;
     private JFormattedTextField txtDataFinal;
@@ -51,6 +56,7 @@ public class TelaRelatorioIndividual extends JFrame {
     private JLabel lblCartaoSus;
     private JLabel lblDataEntrada;
 
+    private DefaultTableModel modeloPrescricoes;
     private DefaultTableModel modeloVacinas;
     private DefaultTableModel modeloEventos;
 
@@ -59,6 +65,7 @@ public class TelaRelatorioIndividual extends JFrame {
     private LocalDate dataInicialAtual;
     private LocalDate dataFinalAtual;
 
+    private List<Prescricao> prescricoesAtuais;
     private List<Vacina> vacinasAtuais;
     private List<EventoSentinela> eventosAtuais;
 
@@ -348,7 +355,7 @@ public class TelaRelatorioIndividual extends JFrame {
         JPanel painel =
                 new JPanel(
                         new GridLayout(
-                                2,
+                                3,
                                 1,
                                 0,
                                 20
@@ -361,6 +368,41 @@ public class TelaRelatorioIndividual extends JFrame {
 
         painel.setAlignmentX(
                 JComponent.LEFT_ALIGNMENT
+        );
+
+        String[] colunasPrescricoes = {
+                "Medicamento",
+                "Dosagem",
+                "Frequência",
+                "Data inicial"
+        };
+
+        modeloPrescricoes =
+                new DefaultTableModel(
+                        colunasPrescricoes,
+                        0
+                ) {
+                    @Override
+                    public boolean isCellEditable(
+                            int row,
+                            int column
+                    ) {
+                        return false;
+                    }
+                };
+
+        JTable tabelaPrescricoes =
+                new JTable(modeloPrescricoes);
+
+        tabelaPrescricoes.setRowHeight(28);
+
+        JScrollPane scrollPrescricoes =
+                new JScrollPane(tabelaPrescricoes);
+
+        scrollPrescricoes.setBorder(
+                BorderFactory.createTitledBorder(
+                        "Medicamentos em Uso"
+                )
         );
 
         String[] colunasVacinas = {
@@ -432,11 +474,12 @@ public class TelaRelatorioIndividual extends JFrame {
                 )
         );
 
+        painel.add(scrollPrescricoes);
         painel.add(scrollVacinas);
         painel.add(scrollEventos);
 
         painel.setPreferredSize(
-                new Dimension(900, 450)
+                new Dimension(900, 650)
         );
 
         return painel;
@@ -480,6 +523,7 @@ public class TelaRelatorioIndividual extends JFrame {
             mostrarAviso(
                     "Digite um CPF válido com 11 dígitos."
             );
+
             return;
         }
 
@@ -498,6 +542,7 @@ public class TelaRelatorioIndividual extends JFrame {
                 mostrarAviso(
                         "A data final não pode ser anterior à data inicial."
                 );
+
                 return;
             }
 
@@ -509,6 +554,7 @@ public class TelaRelatorioIndividual extends JFrame {
             dataFinalAtual = dataFinal;
 
             preencherDadosPaciente();
+            carregarPrescricoes();
 
             carregarVacinas(
                     dataInicial,
@@ -584,6 +630,32 @@ public class TelaRelatorioIndividual extends JFrame {
         );
     }
 
+    private void carregarPrescricoes() {
+        modeloPrescricoes.setRowCount(0);
+
+        prescricoesAtuais =
+                prontuarioMedicoService
+                        .listarPrescricoesAtivas(
+                                pacienteAtual.getId()
+                        );
+
+        for (Prescricao prescricao : prescricoesAtuais) {
+            modeloPrescricoes.addRow(
+                    new Object[]{
+                            prescricao.getMedicamento(),
+                            prescricao.getDosagem(),
+                            prescricao.getFrequencia(),
+
+                            prescricao.getDataInicio() == null
+                                    ? "-"
+                                    : prescricao
+                                    .getDataInicio()
+                                    .format(formatter)
+                    }
+            );
+        }
+    }
+
     private void carregarVacinas(
             LocalDate dataInicial,
             LocalDate dataFinal
@@ -625,19 +697,19 @@ public class TelaRelatorioIndividual extends JFrame {
                                 dataFinal
                         );
 
-        for (
-                EventoSentinela evento
-                : eventosAtuais
-        ) {
+        for (EventoSentinela evento : eventosAtuais) {
             modeloEventos.addRow(
                     new Object[]{
                             evento.getId(),
+
                             formatarEvento(
                                     evento
                                             .getEventosOcorridos()
                                             .name()
                             ),
+
                             evento.getDescricao(),
+
                             evento
                                     .getDataEvento()
                                     .format(formatter)
@@ -646,104 +718,107 @@ public class TelaRelatorioIndividual extends JFrame {
         }
     }
 
-    private void exportarPdf() {
-        if (
-                pacienteAtual == null
-                        || dataInicialAtual == null
-                        || dataFinalAtual == null
-                        || vacinasAtuais == null
-                        || eventosAtuais == null
-        ) {
-            mostrarAviso(
-                    "Primeiro gere o relatório antes de exportar."
-            );
-            return;
-        }
-
-        JFileChooser seletorArquivo =
-                new JFileChooser();
-
-        String nomePaciente =
-                pacienteAtual
-                        .getNomeCompleto()
-                        .replaceAll(
-                                "[^a-zA-ZÀ-ÿ0-9]",
-                                "_"
+        private void exportarPdf() {
+                if (
+                        pacienteAtual == null
+                                || dataInicialAtual == null
+                                || dataFinalAtual == null
+                                || prescricoesAtuais == null
+                                || vacinasAtuais == null
+                                || eventosAtuais == null
+                ) {
+                        mostrarAviso(
+                                "Primeiro gere o relatório antes de exportar."
                         );
 
-        seletorArquivo.setSelectedFile(
-                new File(
-                        "relatorio_"
-                                + nomePaciente
-                                + "_"
-                                + LocalDate.now()
-                                + ".pdf"
-                )
-        );
+                        return;
+                }
 
-        int resultado =
-                seletorArquivo
-                        .showSaveDialog(this);
+                JFileChooser seletorArquivo =
+                        new JFileChooser();
 
-        if (
-                resultado
-                        != JFileChooser.APPROVE_OPTION
-        ) {
-            return;
-        }
+                String nomePaciente =
+                        pacienteAtual
+                                .getNomeCompleto()
+                                .replaceAll(
+                                        "[^a-zA-ZÀ-ÿ0-9]",
+                                        "_"
+                                );
 
-        File arquivo =
-                seletorArquivo.getSelectedFile();
-
-        if (
-                !arquivo
-                        .getName()
-                        .toLowerCase()
-                        .endsWith(".pdf")
-        ) {
-            arquivo =
-                    new File(
-                            arquivo.getAbsolutePath()
-                                    + ".pdf"
-                    );
-        }
-
-        try {
-            relatorioPdfService
-                    .gerarRelatorioIndividual(
-                            arquivo,
-                            pacienteAtual,
-                            dataInicialAtual,
-                            dataFinalAtual,
-                            vacinasAtuais,
-                            eventosAtuais
-                    );
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "PDF gerado com sucesso em:\n"
-                            + arquivo
-                            .getAbsolutePath(),
-                    "PDF gerado",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(
-                        arquivo
+                seletorArquivo.setSelectedFile(
+                        new File(
+                                "relatorio_"
+                                        + nomePaciente
+                                        + "_"
+                                        + LocalDate.now()
+                                        + ".pdf"
+                        )
                 );
-            }
 
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Erro ao exportar o PDF:\n"
-                            + ex.getMessage(),
-                    "Erro",
-                    JOptionPane.ERROR_MESSAGE
-            );
+                int resultado =
+                        seletorArquivo
+                                .showSaveDialog(this);
+
+                if (
+                        resultado
+                                != JFileChooser.APPROVE_OPTION
+                ) {
+                        return;
+                }
+
+                File arquivo =
+                        seletorArquivo.getSelectedFile();
+
+                if (
+                        !arquivo
+                                .getName()
+                                .toLowerCase()
+                                .endsWith(".pdf")
+                ) {
+                        arquivo =
+                                new File(
+                                        arquivo.getAbsolutePath()
+                                                + ".pdf"
+                                );
+                }
+
+                try {
+                        relatorioPdfService
+                                .gerarRelatorioIndividual(
+                                        arquivo,
+                                        pacienteAtual,
+                                        dataInicialAtual,
+                                        dataFinalAtual,
+                                        prescricoesAtuais,
+                                        vacinasAtuais,
+                                        eventosAtuais
+                                );
+
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "PDF gerado com sucesso em:\n"
+                                        + arquivo
+                                        .getAbsolutePath(),
+                                "PDF gerado",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+
+                        if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().open(
+                                arquivo
+                        );
+                        }
+
+                } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(
+                                this,
+                                "Erro ao exportar o PDF:\n"
+                                        + ex.getMessage(),
+                                "Erro",
+                                JOptionPane.ERROR_MESSAGE
+                        );
+                }
         }
-    }
 
     private String formatarEvento(
             String nomeEnum
@@ -780,8 +855,14 @@ public class TelaRelatorioIndividual extends JFrame {
         pacienteAtual = null;
         dataInicialAtual = null;
         dataFinalAtual = null;
+
+        prescricoesAtuais = null;
         vacinasAtuais = null;
         eventosAtuais = null;
+
+        if (modeloPrescricoes != null) {
+            modeloPrescricoes.setRowCount(0);
+        }
 
         if (modeloVacinas != null) {
             modeloVacinas.setRowCount(0);

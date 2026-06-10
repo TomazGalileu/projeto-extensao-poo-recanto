@@ -2,6 +2,7 @@ package com.ProjetoExtensao.Projeto.servicos;
 
 import com.ProjetoExtensao.Projeto.models.EventoSentinela;
 import com.ProjetoExtensao.Projeto.models.Paciente;
+import com.ProjetoExtensao.Projeto.models.Prescricao;
 import com.ProjetoExtensao.Projeto.models.Vacina;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
@@ -33,6 +34,7 @@ public class RelatorioPdfService {
             Paciente paciente,
             LocalDate dataInicial,
             LocalDate dataFinal,
+            List<Prescricao> prescricoes,
             List<Vacina> vacinas,
             List<EventoSentinela> eventos
     ) {
@@ -47,6 +49,7 @@ public class RelatorioPdfService {
             documento.open();
 
             adicionarTitulo(documento);
+
             adicionarPeriodo(
                     documento,
                     dataInicial,
@@ -54,6 +57,7 @@ public class RelatorioPdfService {
             );
 
             adicionarDadosPaciente(documento, paciente);
+            adicionarTabelaPrescricoes(documento, prescricoes);
             adicionarTabelaVacinas(documento, vacinas);
             adicionarTabelaEventos(documento, eventos);
 
@@ -70,8 +74,9 @@ public class RelatorioPdfService {
         }
     }
 
-    private void adicionarTitulo(Document documento)
-            throws Exception {
+    private void adicionarTitulo(
+            Document documento
+    ) throws Exception {
 
         Font fonteTitulo = FontFactory.getFont(
                 FontFactory.HELVETICA_BOLD,
@@ -172,6 +177,72 @@ public class RelatorioPdfService {
         documento.add(tabela);
     }
 
+    private void adicionarTabelaPrescricoes(
+            Document documento,
+            List<Prescricao> prescricoes
+    ) throws Exception {
+
+        adicionarSubtitulo(
+                documento,
+                "Medicamentos em Uso"
+        );
+
+        PdfPTable tabela = new PdfPTable(4);
+        tabela.setWidthPercentage(100);
+        tabela.setWidths(new float[]{4, 2, 3, 2});
+        tabela.setSpacingAfter(18);
+
+        adicionarCabecalho(tabela, "Medicamento");
+        adicionarCabecalho(tabela, "Dosagem");
+        adicionarCabecalho(tabela, "Frequência");
+        adicionarCabecalho(tabela, "Data inicial");
+
+        if (prescricoes.isEmpty()) {
+            PdfPCell celula = new PdfPCell(
+                    new Phrase(
+                            "Nenhum medicamento em uso."
+                    )
+            );
+
+            celula.setColspan(4);
+            celula.setPadding(8);
+            celula.setHorizontalAlignment(
+                    Element.ALIGN_CENTER
+            );
+
+            tabela.addCell(celula);
+
+        } else {
+            for (Prescricao prescricao : prescricoes) {
+                adicionarCelulaComum(
+                        tabela,
+                        prescricao.getMedicamento()
+                );
+
+                adicionarCelulaComum(
+                        tabela,
+                        prescricao.getDosagem()
+                );
+
+                adicionarCelulaComum(
+                        tabela,
+                        prescricao.getFrequencia()
+                );
+
+                adicionarCelulaComum(
+                        tabela,
+                        prescricao.getDataInicio() == null
+                                ? "-"
+                                : prescricao
+                                .getDataInicio()
+                                .format(formatter)
+                );
+            }
+        }
+
+        documento.add(tabela);
+    }
+
     private void adicionarTabelaVacinas(
             Document documento,
             List<Vacina> vacinas
@@ -189,6 +260,7 @@ public class RelatorioPdfService {
 
         adicionarCabecalho(tabela, "ID");
         adicionarCabecalho(tabela, "Vacina");
+
         adicionarCabecalho(
                 tabela,
                 "Data de Aplicação"
@@ -203,6 +275,7 @@ public class RelatorioPdfService {
 
             celula.setColspan(3);
             celula.setPadding(8);
+
             celula.setHorizontalAlignment(
                     Element.ALIGN_CENTER
             );
@@ -260,6 +333,7 @@ public class RelatorioPdfService {
 
             celula.setColspan(4);
             celula.setPadding(8);
+
             celula.setHorizontalAlignment(
                     Element.ALIGN_CENTER
             );
@@ -337,6 +411,7 @@ public class RelatorioPdfService {
         );
 
         celula.setPadding(7);
+
         celula.setHorizontalAlignment(
                 Element.ALIGN_CENTER
         );
@@ -355,6 +430,7 @@ public class RelatorioPdfService {
         );
 
         celula.setPadding(6);
+
         celula.setVerticalAlignment(
                 Element.ALIGN_MIDDLE
         );
@@ -393,7 +469,9 @@ public class RelatorioPdfService {
         tabela.addCell(celula);
     }
 
-    private String formatarEvento(String nomeEnum) {
+    private String formatarEvento(
+            String nomeEnum
+    ) {
         String texto = nomeEnum
                 .replace("_", " ")
                 .toLowerCase();
@@ -402,7 +480,9 @@ public class RelatorioPdfService {
                 + texto.substring(1);
     }
 
-    private String formatarCpf(String cpf) {
+    private String formatarCpf(
+            String cpf
+    ) {
         if (cpf == null || cpf.length() != 11) {
             return cpf == null ? "" : cpf;
         }
