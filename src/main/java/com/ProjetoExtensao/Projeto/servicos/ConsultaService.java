@@ -26,6 +26,10 @@ public class ConsultaService {
     public List<Consulta> findAllConsultasByPaciente(Paciente paciente) {
         return consultaRepositorio.findAllByPaciente(paciente);
     }
+
+    public List<Consulta> findHistoricoConsultasByPaciente(Paciente paciente) {
+        return consultaRepositorio.findAllByPacienteOrderByDataDescHoraDesc(paciente);
+    }
     
     public Consulta findConsultaById(Long id) {
         return consultaRepositorio.findById(id).orElseThrow(() -> new RuntimeException("Consulta não encontrada"));

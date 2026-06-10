@@ -58,6 +58,10 @@ public class NavigationService {
     @Autowired
     private TelaRelatorioIndividual telaRelatorioIndividual;
 
+    @Lazy
+    @Autowired
+    private TelaProntuarioPaciente telaProntuarioPaciente;
+
     public void abrirTelaLogin() {
         telaLogin.setVisible(true);
     }
@@ -113,5 +117,10 @@ public class NavigationService {
     public void abrirTelaRelatorioIndividual() {
         telaRelatorioIndividual.limparCampos();
         telaRelatorioIndividual.setVisible(true);
+    }
+
+    public void abrirTelaProntuarioPaciente(Long pacienteId) {
+        telaProntuarioPaciente.carregarProntuario(pacienteId);
+        telaProntuarioPaciente.setVisible(true);
     }
 }
