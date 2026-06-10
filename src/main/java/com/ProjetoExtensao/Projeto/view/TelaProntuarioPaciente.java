@@ -3,10 +3,12 @@ package com.ProjetoExtensao.Projeto.view;
 import com.ProjetoExtensao.Projeto.infra.Cores;
 import com.ProjetoExtensao.Projeto.infra.DateTimeFormatter;
 import com.ProjetoExtensao.Projeto.infra.PanelsFactory;
+import com.ProjetoExtensao.Projeto.models.Vacina;
 import com.ProjetoExtensao.Projeto.models.Consulta;
 import com.ProjetoExtensao.Projeto.models.Exame;
 import com.ProjetoExtensao.Projeto.models.Paciente;
 import com.ProjetoExtensao.Projeto.models.Prescricao;
+import com.ProjetoExtensao.Projeto.servicos.VacinaService;
 import com.ProjetoExtensao.Projeto.servicos.ConsultaService;
 import com.ProjetoExtensao.Projeto.servicos.PacienteService;
 import com.ProjetoExtensao.Projeto.servicos.ProntuarioMedicoService;
@@ -39,6 +41,9 @@ public class TelaProntuarioPaciente extends JFrame {
     @Autowired
     private ProntuarioMedicoService prontuarioMedicoService;
 
+    @Autowired
+    private VacinaService vacinaService;
+
     private Long pacienteIdAtual;
 
     private JLabel lblNome;
@@ -54,6 +59,7 @@ public class TelaProntuarioPaciente extends JFrame {
     private DefaultTableModel modeloTabelaConsultas;
     private DefaultTableModel modeloTabelaPrescricoes;
     private DefaultTableModel modeloTabelaExames;
+    private DefaultTableModel modeloTabelaVacinas;
     private DefaultListModel<String> modeloInternacoes;
 
     private final java.time.format.DateTimeFormatter formatadorEntrada =
@@ -170,7 +176,7 @@ public class TelaProntuarioPaciente extends JFrame {
         abas.addTab("Prescrições", criarPainelPrescricoes());
         abas.addTab("Exames", criarPainelExames());
         abas.addTab("Internações", criarPainelInternacoes());
-
+        abas.addTab("Vacinas", criarPainelVacinas());
         return abas;
     }
 
@@ -284,6 +290,25 @@ public class TelaProntuarioPaciente extends JFrame {
 
         painel.add(painelBotoes, BorderLayout.NORTH);
         painel.add(new JScrollPane(lista), BorderLayout.CENTER);
+
+        return painel;
+    }
+
+    private JPanel criarPainelVacinas() {
+        JPanel painel = criarPainelTabela();
+
+        String[] colunas = {
+                "ID",
+                "Vacina",
+                "Data de aplicação"
+        };
+
+        modeloTabelaVacinas = criarModeloNaoEditavel(colunas);
+
+        JTable tabela = new JTable(modeloTabelaVacinas);
+        tabela.setRowHeight(25);
+
+        painel.add(new JScrollPane(tabela), BorderLayout.CENTER);
 
         return painel;
     }
@@ -405,6 +430,10 @@ public class TelaProntuarioPaciente extends JFrame {
                 prontuarioMedicoService.listarInternacoes(pacienteIdAtual)
         );
 
+        preencherVacinas(
+                vacinaService.buscarPorPaciente(pacienteIdAtual)
+        );
+
         areaResumo.setText(
                 prontuarioMedicoService.gerarResumoHistorico(pacienteIdAtual)
         );
@@ -467,6 +496,22 @@ public class TelaProntuarioPaciente extends JFrame {
 
         for (String internacao : internacoes) {
             modeloInternacoes.addElement(internacao);
+        }
+    }
+
+    private void preencherVacinas(List<Vacina> vacinas) {
+        modeloTabelaVacinas.setRowCount(0);
+
+        for (Vacina vacina : vacinas) {
+            modeloTabelaVacinas.addRow(new Object[]{
+                    vacina.getId(),
+                    vacina.getNome(),
+
+                    vacina.getDataAplicacao() == null
+                            ? "-"
+                            : vacina.getDataAplicacao()
+                            .format(DateTimeFormatter.DATE_TIME_FORMATTER)
+            });
         }
     }
 
