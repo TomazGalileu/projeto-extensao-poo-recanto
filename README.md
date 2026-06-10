@@ -238,7 +238,7 @@ O sistema busca centralizar esses dados em uma única aplicação, facilitando o
 ## Equipe
 
 - Tomaz Galileu Pessoa Nogueira Silva do Nascimento
-- Maria Calara Sousa Freitas
+- Maria Clara Sousa Freitas
 - Magnum do Vale Freire
 
 ## Licença
