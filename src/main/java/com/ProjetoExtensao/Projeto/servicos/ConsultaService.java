@@ -51,4 +51,31 @@ public class ConsultaService {
 
         consultaRepositorio.save(consulta);
     }
+
+    public Consulta registrarAtendimento(
+        Long consultaId,
+        String diagnostico,
+        String anotacoesMedico
+    ) {
+        Consulta consulta = findConsultaById(consultaId);
+
+        if (diagnostico == null || diagnostico.isBlank()) {
+            throw new RuntimeException(
+                    "Informe o diagnóstico da consulta."
+            );
+        }
+
+        consulta.setDiagnostico(
+                diagnostico.trim()
+        );
+
+        consulta.setAnotacoesMedico(
+                anotacoesMedico == null
+                        || anotacoesMedico.isBlank()
+                        ? null
+                        : anotacoesMedico.trim()
+        );
+
+        return consultaRepositorio.save(consulta);
+    }
 }

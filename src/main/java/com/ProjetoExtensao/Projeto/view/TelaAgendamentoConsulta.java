@@ -49,8 +49,6 @@ public class TelaAgendamentoConsulta extends JFrame {
     private JFormattedTextField cpfField;
     private JFormattedTextField dataField;
     private JTextArea motivoConsultaArea;
-    private JTextArea diagnosticoArea;
-    private JTextArea anotacoesMedicoArea;
 
     @PostConstruct
     public void initUI() {
@@ -92,7 +90,7 @@ public class TelaAgendamentoConsulta extends JFrame {
         Color azulEscuro = Cores.COR_RODAPE;
         Color cinzaTitulo = Cores.COR_LETRA_PAINEL;
 
-        // --- CABEÇALHO DE SEÇÃO --- //
+
         JPanel sectionHeader = new JPanel(new BorderLayout(10, 0));
         sectionHeader.setBackground(Cores.COR_FUNDO_CLARO);
         sectionHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
@@ -300,39 +298,6 @@ public class TelaAgendamentoConsulta extends JFrame {
         JScrollPane motivoScroll = new JScrollPane(motivoConsultaArea);
         formPanel.add(motivoScroll, gbc);
 
-        // --- DIAGNÓSTICO ---
-        gbc.gridy = 8;
-        gbc.insets = new Insets(0, 0, 5, 0);
-        JLabel diagnosticoLabel = new JLabel("Diagnóstico");
-        diagnosticoLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        diagnosticoLabel.setForeground(azulEscuro);
-        formPanel.add(diagnosticoLabel, gbc);
-
-        gbc.gridy = 9;
-        gbc.insets = new Insets(0, 0, 15, 0);
-        diagnosticoArea = new JTextArea(3, 20);
-        diagnosticoArea.setFont(new Font("Arial", Font.PLAIN, 14));
-        diagnosticoArea.setLineWrap(true);
-        diagnosticoArea.setWrapStyleWord(true);
-        JScrollPane diagnosticoScroll = new JScrollPane(diagnosticoArea);
-        formPanel.add(diagnosticoScroll, gbc);
-
-        // --- ANOTAÇÕES DO MÉDICO ---
-        gbc.gridy = 10;
-        gbc.insets = new Insets(0, 0, 5, 0);
-        JLabel anotacoesLabel = new JLabel("Anotações do Médico");
-        anotacoesLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        anotacoesLabel.setForeground(azulEscuro);
-        formPanel.add(anotacoesLabel, gbc);
-
-        gbc.gridy = 11;
-        gbc.insets = new Insets(0, 0, 20, 0);
-        anotacoesMedicoArea = new JTextArea(3, 20);
-        anotacoesMedicoArea.setFont(new Font("Arial", Font.PLAIN, 14));
-        anotacoesMedicoArea.setLineWrap(true);
-        anotacoesMedicoArea.setWrapStyleWord(true);
-        JScrollPane anotacoesScroll = new JScrollPane(anotacoesMedicoArea);
-        formPanel.add(anotacoesScroll, gbc);
 
         // --- BOTÃO ATUALIZAR ---
         JButton refreshButton = panelsFactory.getRefreshButton();
@@ -352,7 +317,7 @@ public class TelaAgendamentoConsulta extends JFrame {
         agendarBtn.setBackground(Cores.COR_RODAPE);
         agendarBtn.setForeground(Color.WHITE);
         gbc.gridx = 0;
-        gbc.gridy = 12;
+        gbc.gridy = 8;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.EAST;
         gbc.fill = GridBagConstraints.NONE;
@@ -377,9 +342,8 @@ public class TelaAgendamentoConsulta extends JFrame {
             String medicoNome = (String) medicosComboBox.getSelectedItem();
             String tipoConsulta = (String) especialidadeComboBox.getSelectedItem();
             
-            String motivoConsulta = motivoConsultaArea.getText().trim();
-            String diagnostico = diagnosticoArea.getText().trim();
-            String anotacoesMedico = anotacoesMedicoArea.getText().trim();
+            String motivoConsulta =
+                motivoConsultaArea.getText().trim();
 
             // Verificar se o paciente existe
             try {
@@ -389,7 +353,16 @@ public class TelaAgendamentoConsulta extends JFrame {
                 return;
             }
 
-            consultaService.salvarConsulta(pacienteCpf, data, hora, medicoNome, tipoConsulta, motivoConsulta, diagnostico, anotacoesMedico);
+            consultaService.salvarConsulta(
+                pacienteCpf,
+                data,
+                hora,
+                medicoNome,
+                tipoConsulta,
+                motivoConsulta,
+                "",
+                ""
+            );
 
             JOptionPane.showMessageDialog(this, "✓ Consulta agendada com sucesso!\n\nVocê pode agendar outra consulta ou fechar esta janela.", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             limparCampos();
@@ -493,9 +466,8 @@ public class TelaAgendamentoConsulta extends JFrame {
         if (especialidadeComboBox != null) especialidadeComboBox.setSelectedIndex(0);
         if (horaComboBox != null) horaComboBox.setSelectedIndex(0);
         if (minutoComboBox != null) minutoComboBox.setSelectedIndex(0);
-        if (motivoConsultaArea != null) motivoConsultaArea.setText("");
-        if (diagnosticoArea != null) diagnosticoArea.setText("");
-        if (anotacoesMedicoArea != null) anotacoesMedicoArea.setText("");
+        if (motivoConsultaArea != null) {
+            motivoConsultaArea.setText("");
+        }
     }
-
 }

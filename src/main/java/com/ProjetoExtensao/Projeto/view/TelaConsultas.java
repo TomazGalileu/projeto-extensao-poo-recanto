@@ -51,6 +51,7 @@ public class TelaConsultas extends JFrame {
     private javax.swing.table.DefaultTableModel modeloTabela;
     private JPanel painelTabela;
     private List<Consulta> consultasEncontradas;
+    private Consulta consultaSelecionada;
 
     // Campos de pesquisa
     private JTextField pacientCpfField;
@@ -118,6 +119,38 @@ public class TelaConsultas extends JFrame {
         novaConsultaBtn.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
         novaConsultaBtn.setFocusPainted(false);
         sectionButtonsPanel.add(novaConsultaBtn);
+
+        JButton registrarAtendimentoBtn =
+            new JButton("Registrar Atendimento");
+
+        registrarAtendimentoBtn.setFont(
+                new Font("Arial", Font.BOLD, 16)
+        );
+
+        registrarAtendimentoBtn.setBackground(
+                azulEscuro
+        );
+
+        registrarAtendimentoBtn.setForeground(
+                Color.WHITE
+        );
+
+        registrarAtendimentoBtn.setBorder(
+                BorderFactory.createEmptyBorder(
+                        10,
+                        15,
+                        10,
+                        15
+                )
+        );
+
+        registrarAtendimentoBtn.setFocusPainted(false);
+
+        registrarAtendimentoBtn.addActionListener(
+                e -> registrarAtendimentoConsultaSelecionada()
+        );
+
+        sectionButtonsPanel.add(registrarAtendimentoBtn);
 
         // Ação do botão "Nova Consulta"
         novaConsultaBtn.addActionListener(e -> {
@@ -499,6 +532,7 @@ public class TelaConsultas extends JFrame {
     }
 
     private void atualizarDadosConsulta(Consulta consulta) {
+        consultaSelecionada = consulta;
         consultaNumField.setText(consulta.getId().toString());
         dataConsultaField.setText(consulta.getData().format(DateTimeFormatter.DATE_TIME_FORMATTER));
         horaConsultaField.setText(consulta.getHora().toString());
@@ -520,6 +554,7 @@ public class TelaConsultas extends JFrame {
 
     // Método para limpar os campos da seção Detalhes da Consulta
     private void limparCamposDetalhes() {
+        consultaSelecionada = null;
         consultaNumField.setText("");
         dataConsultaField.setText("");
         horaConsultaField.setText("");
@@ -615,6 +650,90 @@ public class TelaConsultas extends JFrame {
                     break;
                 }
             }
+        }
+    }
+
+    private void registrarAtendimentoConsultaSelecionada() {
+        if (consultaSelecionada == null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Pesquise e selecione uma consulta antes de registrar o atendimento.",
+                    "Consulta não selecionada",
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            return;
+        }
+
+        JTextArea campoDiagnostico =
+                new JTextArea(5, 35);
+
+        JTextArea campoAnotacoes =
+                new JTextArea(5, 35);
+
+        campoDiagnostico.setLineWrap(true);
+        campoDiagnostico.setWrapStyleWord(true);
+
+        campoAnotacoes.setLineWrap(true);
+        campoAnotacoes.setWrapStyleWord(true);
+
+        if (consultaSelecionada.getDiagnostico() != null) {
+            campoDiagnostico.setText(
+                    consultaSelecionada.getDiagnostico()
+            );
+        }
+
+        if (consultaSelecionada.getAnotacoesMedico() != null) {
+            campoAnotacoes.setText(
+                    consultaSelecionada.getAnotacoesMedico()
+            );
+        }
+
+        Object[] campos = {
+                "Diagnóstico:",
+                new JScrollPane(campoDiagnostico),
+                "Anotações do médico:",
+                new JScrollPane(campoAnotacoes)
+        };
+
+        int resultado = JOptionPane.showConfirmDialog(
+                this,
+                campos,
+                "Registrar Atendimento",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (resultado != JOptionPane.OK_OPTION) {
+            return;
+        }
+
+        try {
+            consultaSelecionada =
+                    consultaService.registrarAtendimento(
+                            consultaSelecionada.getId(),
+                            campoDiagnostico.getText(),
+                            campoAnotacoes.getText()
+                    );
+
+            atualizarDadosConsulta(
+                    consultaSelecionada
+            );
+
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Atendimento registrado com sucesso.",
+                    "Sucesso",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+        } catch (RuntimeException exception) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    exception.getMessage(),
+                    "Erro ao registrar atendimento",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 }
